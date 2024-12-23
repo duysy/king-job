@@ -73,6 +73,9 @@ class JobSchema(Schema):
     client: Optional[WebThreeUserSimpleSchema] = None
     freelancer: Optional[WebThreeUserSimpleSchema] = None
     job_type: Optional[JobTypeSchema] = None
+    transaction_create : Optional[str] = None
+    transaction_accept_job : Optional[str] = None
+    transaction_complete_job : Optional[str]= None
     
 class CreateJobSchema(Schema):
     title: str
