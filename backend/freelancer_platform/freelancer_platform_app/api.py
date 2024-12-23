@@ -128,6 +128,7 @@ def update_user(request, payload: UserUpdateSchema):
 @api.post("/upload-file", tags=["File Management"])
 def upload_file(request, file: NinjaUploadedFile = File(...)):
     DOMAIN_ROOT = "http://localhost:8000/api/read-file"
+    DOMAIN_ROOT = "/api/read-file"
     try:
         # Generate a unique file name
         file_extension = os.path.splitext(file.name)[1]
