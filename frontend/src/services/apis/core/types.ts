@@ -109,7 +109,7 @@ export interface IGetJobsOptions {
 export interface ICompletedProject {
   id: number;
   title: string;
-  amount: number;
+  amount: string;
   description: string;
   completed_at: string; // ISO 8601 string for date
 }
@@ -133,5 +133,5 @@ export interface IUserResume {
   date_joined: string; // ISO 8601 string for date
   social_links: ISocialLinks;
   completed_projects: ICompletedProject[];
-  total_income: number;
+  total_income: string;
 }
