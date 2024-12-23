@@ -40,7 +40,7 @@ const CreateJobPage: React.FC = () => {
   const onSubmit = (data: any) => {
     data.image = uploadedImage;
     data.job_type = Number(data.job_type);
-    data.amount = parseEther(data.amount).toString();
+    data.amount = parseEther(data.amount.toString()).toString();
     data.info = infoValue;
     createJob(data, {
       onSuccess: () => {
