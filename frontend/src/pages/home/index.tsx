@@ -50,7 +50,7 @@ const HomePage: React.FC = () => {
             <img
               src="/banner.png"
               alt="Freelancer illustration"
-              className="w-full lg:w-[90%] xl:w-[100%] object-cover rounded-lg shadow-lg"
+              className="w-full lg:w-[90%] xl:w-[100%] object-cover rounded-lg shadow-lg scale-125"
             />
           </div>
         </div>

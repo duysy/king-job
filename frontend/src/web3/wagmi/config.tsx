@@ -13,8 +13,30 @@ import {
   trustWallet,
   walletConnectWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-import { createConfig, http } from "wagmi";
+import { createConfig, createStorage, http } from "wagmi";
 import { opBNBTestnet } from "wagmi/chains";
+
+const storage = createStorage({
+  storage: {
+    getItem: (key: string) => {
+      try {
+        return window.localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    },
+    setItem: (key: string, value: string) => {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch {}
+    },
+    removeItem: (key: string) => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {}
+    },
+  },
+});
 
 // Define connectors
 const connectors = connectorsForWallets(
@@ -35,7 +57,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: "King Job",
-    projectId: "95095172edab2a830311796cfc9d1683",
+    projectId: "42d6bd19b268a1fc408fbeeaa41220c1",
   }
 );
 
@@ -46,6 +68,7 @@ export const config = createConfig({
   transports: {
     [opBNBTestnet.id]: http(),
   },
+  storage,
 });
 
 // Export configuration

@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { formatEther } from "ethers";
 import React from "react";
 import { useParams } from "react-router-dom";
+import TransactionSequence from "./components/TransactionSequence";
 
 const JobDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -107,6 +108,16 @@ const JobDetailsPage: React.FC = () => {
               />
             </div>
           )}
+          <div className="my-6">
+            <h2 className="text-3xl font-bold text-blue-800 mb-3">
+              Transaction History
+            </h2>
+            <TransactionSequence
+              transactionAcceptJob={job.transaction_accept_job}
+              transactionCompleteJob={job.transaction_complete_job}
+              transactionCreate={job.transaction_create}
+            />
+          </div>
 
           {/* Info Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

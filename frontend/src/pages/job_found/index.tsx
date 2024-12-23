@@ -12,6 +12,7 @@ import { formatDistanceToNow } from "date-fns";
 import { formatEther } from "ethers";
 import React from "react";
 import { useParams } from "react-router-dom";
+import TransactionSequence from "../job_details/components/TransactionSequence";
 
 const JobFoundPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -129,6 +130,17 @@ const JobFoundPage: React.FC = () => {
             >
               {job.status}
             </span>
+          </div>
+
+          <div className="my-6">
+            <h2 className="text-3xl font-bold text-blue-800 mb-3">
+              Transaction History
+            </h2>
+            <TransactionSequence
+              transactionAcceptJob={job.transaction_accept_job}
+              transactionCompleteJob={job.transaction_complete_job}
+              transactionCreate={job.transaction_create}
+            />
           </div>
         </div>
 

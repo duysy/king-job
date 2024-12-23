@@ -64,6 +64,9 @@ export interface IJob {
   client?: IUserInfo;
   freelancer?: IUserInfo;
   job_type?: IJobType;
+  transaction_create?: string | null;
+  transaction_accept_job?: string | null;
+  transaction_complete_job?: string | null;
 }
 
 export interface ICreateJobPayload {

@@ -1,4 +1,4 @@
-import Logo from "@/assets/logos/logo.jpg";
+import Logo from "@/assets/logos/logo.png";
 import { UrlMapping } from "@/commons/url-mapping.common";
 import { useLogin } from "@/services/apis/auth";
 import { useAuthStore } from "@/services/stores/useAuthStore";
