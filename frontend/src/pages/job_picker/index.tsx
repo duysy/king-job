@@ -14,7 +14,7 @@ import {
 } from "@/services/apis/core";
 import { useAuthStore } from "@/services/stores/useAuthStore";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 const JobPickersPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,9 +23,8 @@ const JobPickersPage: React.FC = () => {
   const [selectedPicker, setSelectedPicker] =
     useState<IUserInfoProfileSchema | null>(null);
 
-  const { accept } = useAcceptJob();
-  const { complete } = useCompleteJob();
-  const navigate = useNavigate();
+  const { accept, isLoading: isLoadingAcceptJob } = useAcceptJob();
+  const { complete, isLoading: isLoadingCompleteJob } = useCompleteJob();
 
   const {
     data: job,
@@ -177,35 +176,46 @@ const JobPickersPage: React.FC = () => {
                   <h4 className="text-xl font-bold text-blue-800 mb-2">
                     {selectedPicker.name ||
                       `${selectedPicker.username?.slice(0, 20)}...`}
+                    <a
+                      href={`${UrlMapping.resume}/${selectedPicker.wallet_address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline ml-5"
+                    >
+                      View Resume
+                    </a>
                   </h4>
+
                   {selectedPicker.bio && (
                     <p className="text-gray-600 mb-2">{selectedPicker.bio}</p>
                   )}
                   <span className="font-mono">
                     <b>{selectedPicker.wallet_address}</b>{" "}
                   </span>
-                  <a
-                    href={`${UrlMapping.resume}/${selectedPicker.wallet_address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-lg text-blue-600 hover:underline ml-5"
-                  >
-                    View Resume
-                  </a>
                 </div>
 
                 {canAcceptJob && (
                   <button
+                    disabled={isLoadingAcceptJob}
                     onClick={handleAcceptJob}
-                    className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ml-8"
+                    className={`${
+                      isLoadingAcceptJob
+                        ? "bg-yellow-300 cursor-not-allowed"
+                        : "bg-yellow-500"
+                    }  text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ml-8`}
                   >
                     Accept Freelancer
                   </button>
                 )}
                 {canCompleteJob && (
                   <button
+                    disabled={isLoadingCompleteJob}
                     onClick={handleCompleteJob}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition ml-8"
+                    className={`${
+                      isLoadingCompleteJob
+                        ? "bg-green-300 cursor-not-allowed"
+                        : "bg-green-500"
+                    } text-white px-4 py-2 rounded-lg hover:bg-green-600 transition ml-8`}
                   >
                     Complete & Pay
                   </button>

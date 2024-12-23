@@ -10,44 +10,49 @@ const UserInfoPage: React.FC = () => {
   return (
     <div className="bg-gradient-to-b from-blue-50 to-gray-50 min-h-screen">
       <NavigationBar />
-      <div className="container mx-auto max-w-6xl p-6 mt-10">
-        <div className="flex justify-center mb-8">
-          <button
-            className={`px-6 py-3 rounded-t-lg font-semibold focus:outline-none mx-1 ${
-              activeTab === "userInfo"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-            onClick={() => setActiveTab("userInfo")}
-          >
-            User Info
-          </button>
+      <div className="container mx-auto max-w-8xl p-6 mt-10">
+        <div className="flex">
+          {/* Left Sidebar */}
+          <div className="max-w-xl bg-white shadow-lg rounded-lg p-4">
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg mb-2 font-semibold focus:outline-none ${
+                activeTab === "userInfo"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+              onClick={() => setActiveTab("userInfo")}
+            >
+              User Info
+            </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg mb-2 font-semibold focus:outline-none ${
+                activeTab === "myJob"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+              onClick={() => setActiveTab("myJob")}
+            >
+              My Jobs
+            </button>
+            <button
+              className={`w-full text-left px-4 py-3 rounded-lg font-semibold focus:outline-none ${
+                activeTab === "findJob"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+              onClick={() => setActiveTab("findJob")}
+            >
+              Find Work
+            </button>
+          </div>
 
-          <button
-            className={`px-6 py-3 rounded-t-lg font-semibold focus:outline-none mx-1 ${
-              activeTab === "myJob"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-            onClick={() => setActiveTab("myJob")}
-          >
-            My Jobs
-          </button>
-
-          <button
-            className={`px-6 py-3 rounded-t-lg font-semibold focus:outline-none mx-1 ${
-              activeTab === "findJob"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-700"
-            }`}
-            onClick={() => setActiveTab("findJob")}
-          >
-            My Work
-          </button>
+          {/* Right Content Area */}
+          <div className="w-3/4 ml-6">
+            {activeTab === "userInfo" && <UserInfoTab />}
+            {activeTab === "myJob" && <MyJobTab />}
+            {activeTab === "findJob" && <FindJobTab />}
+          </div>
         </div>
-        {activeTab === "userInfo" && <UserInfoTab />}
-        {activeTab === "myJob" && <MyJobTab />}
-        {activeTab === "findJob" && <FindJobTab />}
       </div>
     </div>
   );

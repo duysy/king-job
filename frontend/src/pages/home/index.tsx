@@ -24,33 +24,35 @@ const HomePage: React.FC = () => {
       <NavigationBar />
 
       {/* Hero Section */}
-      <section className="relative pt-16 pb-32 bg-gradient-to-r from-blue-800 to-purple-800 text-white">
+      <section className="relative pt-36 pb-32 bg-gradient-to-r from-blue-500 to-purple-500 text-yellow-300">
         <div className="container mx-auto flex flex-col lg:flex-row items-center gap-12 px-5 lg:px-16">
           {/* Left Column - Intro Text */}
           <div className="lg:w-1/2">
-            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight text-center">
               Discover & Hire <br /> Top Freelancers
             </h1>
-            <p className="mb-8 text-lg">
+            <p className="mb-8 text-lg text-center">
               Connect with talented professionals and explore the latest job
               opportunities.
             </p>
             {!isAuthenticated ? (
-              <button
-                className="bg-yellow-400 text-blue-800 py-3 px-8 rounded-full font-semibold shadow-md hover:bg-yellow-500 hover:shadow-lg transition-all duration-300"
-                onClick={openConnectModal}
-              >
-                Connect Wallet
-              </button>
+              <div className="w-full flex justify-center items-center">
+                <button
+                  className="bg-yellow-400 text-blue-800 py-3 px-8 rounded-full font-semibold shadow-md hover:bg-yellow-500 hover:shadow-lg transition-all duration-300"
+                  onClick={openConnectModal}
+                >
+                  Connect Wallet
+                </button>
+              </div>
             ) : null}
           </div>
 
           {/* Right Column - Larger Image */}
-          <div className="lg:w-1/2 flex justify-center lg:justify-end">
+          <div className="lg:w-1/2 flex justify-center items-center lg:justify-end">
             <img
               src="/banner.png"
               alt="Freelancer illustration"
-              className="w-full lg:w-[90%] xl:w-[100%] object-cover rounded-lg shadow-lg scale-125"
+              className="w-full lg:w-[90%] xl:w-[100%] object-cover scale-125"
             />
           </div>
         </div>

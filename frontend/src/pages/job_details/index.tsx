@@ -89,7 +89,7 @@ const JobDetailsPage: React.FC = () => {
           <img
             src={job.image || "https://placehold.co/600x400"}
             alt={job.title}
-            className="w-full max-h-[60vh] rounded-lg object-cover shadow-lg"
+            className="w-full h-auto rounded-lg object-cover shadow-lg"
           />
         </div>
 

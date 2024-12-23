@@ -33,6 +33,8 @@ api = NinjaAPI()
 SECRET_KEY = settings.SECRET_KEY
 
 # Utility Functions
+
+
 def generate_jwt_token(user):
     payload = {
         'user_id': user.id,
@@ -42,6 +44,7 @@ def generate_jwt_token(user):
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     return token
+
 
 def jwt_authentication(request):
     auth_header = request.headers.get('Authorization')
@@ -58,6 +61,8 @@ def jwt_authentication(request):
         raise HttpError(401, "Invalid or expired token")
 
 # Authentication Endpoints
+
+
 @api.post("/login", tags=["Authentication"], response=LoginResponseSchema)
 def login(request, payload: LoginSchema):
     try:
@@ -79,24 +84,27 @@ def login(request, payload: LoginSchema):
         raise HttpError(400, str(e))
 
 # User Management APIs
+
+
 @api.get("/user/info", tags=["User Info"], response=UserInfoSchema)
 def get_user_info(request):
     user = jwt_authentication(request)
     user_data = {
-        "id": user.id,        
+        "id": user.id,
         "username": user.username,
         "wallet_address": user.wallet_address,
         "name": user.name,
         "image": user.image,
         "bio": user.bio,
-        "facebook": user.facebook, 
+        "facebook": user.facebook,
         "twitter": user.twitter,
         "linkedin": user.linkedin,
         "github": user.github,
-        "instagram": user.instagram, 
+        "instagram": user.instagram,
 
     }
     return UserInfoSchema(**user_data)
+
 
 @api.put("/user/update", tags=["User Info"], response={200: str, 400: str})
 def update_user(request, payload: UserUpdateSchema):
@@ -109,15 +117,15 @@ def update_user(request, payload: UserUpdateSchema):
         if payload.image is not None:
             user.image = payload.image
         if payload.facebook is not None:
-            user.facebook = payload.facebook 
+            user.facebook = payload.facebook
         if payload.twitter is not None:
-            user.twitter = payload.twitter 
+            user.twitter = payload.twitter
         if payload.linkedin is not None:
-            user.linkedin = payload.linkedin 
+            user.linkedin = payload.linkedin
         if payload.github is not None:
-            user.github = payload.github 
+            user.github = payload.github
         if payload.instagram is not None:
-            user.instagram = payload.instagram 
+            user.instagram = payload.instagram
         user.save()
 
         return 200, "User information updated successfully."
@@ -125,6 +133,8 @@ def update_user(request, payload: UserUpdateSchema):
         return 400, f"Error updating user information: {str(e)}"
 
 # File Management
+
+
 @api.post("/upload-file", tags=["File Management"])
 def upload_file(request, file: NinjaUploadedFile = File(...)):
     DOMAIN_ROOT = "http://localhost:8000/api/read-file"
@@ -141,6 +151,7 @@ def upload_file(request, file: NinjaUploadedFile = File(...)):
     except Exception as e:
         raise HttpError(400, f"Error uploading file: {str(e)}")
 
+
 @api.get("/read-file/{file_name}", tags=["File Management"])
 def read_file(request, file_name: str):
     """
@@ -156,10 +167,12 @@ def read_file(request, file_name: str):
     except Exception as e:
         raise HttpError(500, f"Error reading file: {str(e)}")
 
+
 @api.get("/job-types", tags=["Jobs"], response=list[JobTypeSchema])
 def list_job_types(request):
     job_types = JobType.objects.all().order_by('-created_at')
     return job_types
+
 
 @api.post("/jobs", tags=["Jobs"], response=JobSchema)
 def create_job(request, payload: CreateJobSchema):
@@ -180,6 +193,7 @@ def create_job(request, payload: CreateJobSchema):
     )
     return job
 
+
 @api.get("/jobs", tags=["Jobs"], response=list[JobSchema])
 def get_jobs(
     request,
@@ -194,27 +208,29 @@ def get_jobs(
 
     # Apply filters only if they are provided
     filters = Q()
-    
+
     if job_type_id is not None:
         filters &= Q(job_type_id=job_type_id)
-    
+
     if min_amount is not None:
         filters &= Q(amount__gte=min_amount)
-    
+
     if max_amount is not None:
         filters &= Q(amount__lte=max_amount)
-    
+
     if status:
         filters &= Q(status=status)
-    
+
     if search:
-        search_filters = Q(title__icontains=search) | Q(description__icontains=search)
+        search_filters = Q(title__icontains=search) | Q(
+            description__icontains=search)
         filters &= search_filters
-    
+
     if filters:
         jobs = jobs.filter(filters)
 
     return jobs
+
 
 @api.get("/jobs/by-client", tags=["Jobs"], response=list[JobSchema])
 def jobs_by_client(request):
@@ -222,12 +238,15 @@ def jobs_by_client(request):
     jobs = Job.objects.filter(client=user).order_by('-created_at')
     return jobs
 
+
 @api.get("/jobs/by-freelancer", tags=["Jobs"], response=list[JobSchema])
 def jobs_by_freelancer(request):
     user = jwt_authentication(request)
     try:
-        assigned_jobs = Job.objects.filter(freelancer=user).order_by('-created_at')
-        picked_jobs = Job.objects.filter(picks__freelancer=user).order_by('-created_at')
+        assigned_jobs = Job.objects.filter(
+            freelancer=user).order_by('-created_at')
+        picked_jobs = Job.objects.filter(
+            picks__freelancer=user).order_by('-created_at')
         jobs = assigned_jobs.union(picked_jobs).order_by('-created_at')
         return jobs
     except Exception as e:
@@ -238,6 +257,7 @@ def jobs_by_freelancer(request):
 def newest_jobs(request):
     jobs = Job.objects.exclude(status="NEW").order_by('-created_at')[:6]
     return list(jobs)
+
 
 @api.get("/top-freelancers", tags=["Jobs"], response=list[TopFreelancerSchema])
 def top_freelancers(request):
@@ -259,6 +279,7 @@ def top_freelancers(request):
         })
     return result
 
+
 @api.get("/jobs/{job_id}/chat", tags=["Chat"], response=list[dict])
 def fetch_chat_messages(
     request,
@@ -273,7 +294,7 @@ def fetch_chat_messages(
             raise HttpError(403, "You do not have access to this chat")
 
         messages = ChatMessage.objects.filter(job=job).order_by("timestamp")
-        
+
         if user_A and user_B:
             messages = messages.filter(
                 Q(sender__wallet_address=user_A, receiver__wallet_address=user_B) |
@@ -297,6 +318,7 @@ def fetch_chat_messages(
     except Exception as e:
         raise HttpError(500, f"Error fetching chat messages: {str(e)}")
 
+
 @api.post("/jobs/{job_id}/chat", tags=["Chat"], response={200: str, 403: str, 404: str})
 def send_chat_message(request, job_id: int, payload: ChatMessagePayloadSchema):
     user = jwt_authentication(request)
@@ -304,12 +326,14 @@ def send_chat_message(request, job_id: int, payload: ChatMessagePayloadSchema):
         content = payload.content
         receiver_address = payload.receiver_address
 
-        receiver_user = WebThreeUser.objects.get(wallet_address=receiver_address)
+        receiver_user = WebThreeUser.objects.get(
+            wallet_address=receiver_address)
         job = Job.objects.get(id=job_id)
         if job.client != user and not job.picks.filter(freelancer=user).exists():
             raise HttpError(403, "You do not have access to this chat")
 
-        ChatMessage.objects.create(sender=user, receiver=receiver_user, job=job, content=content)
+        ChatMessage.objects.create(
+            sender=user, receiver=receiver_user, job=job, content=content)
         return 200, "Message sent successfully"
     except WebThreeUser.DoesNotExist:
         raise HttpError(404, "Receiver not found")
@@ -318,7 +342,7 @@ def send_chat_message(request, job_id: int, payload: ChatMessagePayloadSchema):
     except Exception as e:
         raise HttpError(500, f"Error sending message: {str(e)}")
 
-    
+
 @api.get("/jobs/{job_id}", tags=["Jobs"], response=JobSchema)
 def get_job_by_id(request, job_id: int):
     try:
@@ -326,6 +350,7 @@ def get_job_by_id(request, job_id: int):
         return job
     except Job.DoesNotExist:
         raise HttpError(404, "Job not found")
+
 
 @api.get("/jobs/{job_id}/picks", tags=["Jobs"], response=list[UserInfoProfileSchema])
 def get_freelancers_by_job_id(request, job_id: int):
@@ -349,9 +374,11 @@ def get_freelancers_by_job_id(request, job_id: int):
         return freelancers
 
     except Job.DoesNotExist:
-        raise HttpError(404, "Job not found or you do not have access to this job")
+        raise HttpError(
+            404, "Job not found or you do not have access to this job")
     except Exception as e:
         raise HttpError(500, f"Error fetching freelancers: {str(e)}")
+
 
 @api.post("/jobs/{job_id}/pick", tags=["Jobs"], response={200: str, 400: str, 404: str})
 def pick_job(request, job_id: int):
@@ -360,7 +387,8 @@ def pick_job(request, job_id: int):
         job = Job.objects.get(id=job_id)
         if job.freelancer == user:
             raise HttpError(400, "You are already assigned to this job")
-        existing_pick = JobPick.objects.filter(job=job, freelancer=user).first()
+        existing_pick = JobPick.objects.filter(
+            job=job, freelancer=user).first()
         if existing_pick:
             raise HttpError(400, "You have already picked this job")
         JobPick.objects.create(job=job, freelancer=user)
@@ -369,6 +397,7 @@ def pick_job(request, job_id: int):
         raise HttpError(404, "Job not found")
     except Exception as e:
         raise HttpError(500, f"Error picking job: {str(e)}")
+
 
 @api.get("/users/{user_wallet}/resume", tags=["Public Resume"], response=PublicUserResumeSchema)
 def get_public_user_resume(request, user_wallet: str):
@@ -380,7 +409,8 @@ def get_public_user_resume(request, user_wallet: str):
             status="COMPLETED"
         ).order_by('-created_at')
 
-        total_income = completed_projects.aggregate(total=Sum('amount'))['total'] or 0.0
+        total_income = completed_projects.aggregate(
+            total=Sum('amount'))['total'] or 0.0
 
         completed_projects_data = [
             {

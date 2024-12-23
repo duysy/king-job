@@ -67,7 +67,7 @@ const NavigationBar = () => {
 
   return (
     <header
-      className={`bg-gradient-to-r from-indigo-600 to-blue-500 shadow-md fixed w-full top-0 z-50 overflow-hidden${
+      className={`bg-gradient-to-r from-blue-500 to-blue-500 shadow-md fixed w-full top-0 z-50 overflow-hidden${
         isScrolled ? "scrolled" : ""
       }`}
       style={{ position: "sticky", top: 0 }}
