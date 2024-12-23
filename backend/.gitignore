@@ -1,0 +1,39 @@
+# Virtual environment
+venv/
+env/
+ENV/
+env.bak/
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Django specific
+*.log
+*.pot
+*.pyc
+*.pyo
+*.sqlite3
+*.mo
+*.swp
+
+# Static files
+staticfiles/
+media/
+
+# Local settings
+local_settings.py
+
+# VS Code settings
+.vscode/
+
+# Other
+.DS_Store
+.idea/
+Lib/
+Scripts/
+pyvenv.cfg

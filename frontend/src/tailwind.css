@@ -1,0 +1,86 @@
+/* src/tailwind.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.hidden-custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--secondary) var(--primary);
+}
+
+.hidden-custom-scrollbar::-webkit-scrollbar {
+  width: 15px;
+}
+
+.hidden-custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--primary);
+  border-radius: 5px;
+}
+
+.hidden-custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--secondary);
+  border-radius: 14px;
+  border: 3px solid var(--primary);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-launch {
+  animation: spin 30s linear infinite;
+}
+
+.spin-launch-1 {
+  animation: spin 100s linear infinite;
+}
+
+@keyframes fly-up {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-200px);
+    opacity: 0.3;
+  }
+}
+
+.vibrate {
+  animation: vibrate 0.3s ease-in-out;
+}
+
+@keyframes vibrate {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, -2px);
+  }
+  40% {
+    transform: translate(2px, -2px);
+  }
+  60% {
+    transform: translate(-2px, 2px);
+  }
+  80% {
+    transform: translate(2px, 2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}

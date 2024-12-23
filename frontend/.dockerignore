@@ -1,0 +1,27 @@
+# Ignore node_modules
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Logs
+logs
+*.log
+
+# Dependency directories
+node_modules/
+.pnp/
+.pnp.js
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js build output
+.next/
+out/
+
+# Miscellaneous
+.DS_Store

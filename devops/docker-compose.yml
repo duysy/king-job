@@ -1,0 +1,76 @@
+version: "3.9"
+services:
+  freelancer_platform_db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ./db_backup:/var/lib/postgresql/data
+    networks:
+      - freelancer_platform_network
+
+  freelancer_platform_api:
+    build:
+      context: ../backend/freelancer_platform
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - freelancer_platform_db
+    env_file:
+      - .env.backend
+    command: python manage.py runserver 0.0.0.0:8000 --noreload
+    volumes:
+      - ./media:/app/media
+    networks:
+      - freelancer_platform_network
+
+  freelancer_platform_worker:
+    build:
+      context: ../smart-contract
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - freelancer_platform_db
+    env_file:
+      - .env.worker
+    command: npx hardhat run worker/main.ts
+    networks:
+      - freelancer_platform_network
+
+  freelancer_platform_ui:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - freelancer_platform_api
+    networks:
+      - freelancer_platform_network
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    depends_on:
+      - freelancer_platform_api
+      - freelancer_platform_ui
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/.well-known:/etc/nginx/.well-known
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d/freelancer_platform_kingofshiba_xyz.conf:/etc/nginx/conf.d/freelancer_platform_kingofshiba_xyz.conf
+      - /etc/letsencrypt/live/king-job.kingofshiba.xyz/fullchain.pem:/etc/letsencrypt/live/king-job.kingofshiba.xyz/fullchain.pem
+      - /etc/letsencrypt/live/king-job.kingofshiba.xyz/privkey.pem:/etc/letsencrypt/live/king-job.kingofshiba.xyz/privkey.pem
+    networks:
+      - freelancer_platform_network
+
+networks:
+  freelancer_platform_network:
+    name: freelancer_platform_network
+    driver: bridge

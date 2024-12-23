@@ -1,0 +1,77 @@
+/* Custom Toast Styles with Galaxy-Like Gradient Background */
+.custom-toast {
+  border-radius: 12px; /* Increased rounding for a smoother look */
+  background: linear-gradient(
+      359.65deg,
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.15)
+    ),
+    linear-gradient(359.65deg, #6e5aba 27.64%, #4a609a 99.69%);
+  color: #ffffff;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2); /* Softer, larger shadow for depth */
+  font-family: "Poppins", sans-serif;
+  padding: 6px; /* More padding for breathing room */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-toast-body {
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Slightly more gap between icon and text */
+}
+
+.custom-toast-progress {
+  background: linear-gradient(90deg, #7f7fd5, #86a8e7, #91eae4);
+  height: 5px; /* Thinner progress bar */
+  border-radius: 2px;
+}
+
+/* Toast Icon Styling */
+.toast-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0; /* Ensures the icon doesn't shrink */
+}
+
+/* Success Toast */
+.Toastify__toast--success {
+  border-left: 6px solid #81c784;
+  background: linear-gradient(
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.15)
+    ),
+    linear-gradient(359.65deg, #6e5aba 27.64%, #4a609a 99.69%);
+}
+
+/* Error Toast */
+.Toastify__toast--error {
+  border-left: 6px solid #e57373;
+  background: linear-gradient(
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.15)
+    ),
+    linear-gradient(359.65deg, #6e5aba 27.64%, #4a609a 99.69%);
+}
+
+/* Info Toast */
+.Toastify__toast--info {
+  border-left: 6px solid #42a5f5;
+  background: linear-gradient(
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.15)
+    ),
+    linear-gradient(359.65deg, #6e5aba 27.64%, #4a609a 99.69%);
+}
+
+/* Warning Toast */
+.Toastify__toast--warning {
+  border-left: 6px solid #ffcc80;
+  background: linear-gradient(
+      rgba(255, 255, 255, 0.15),
+      rgba(255, 255, 255, 0.15)
+    ),
+    linear-gradient(359.65deg, #6e5aba 27.64%, #4a609a 99.69%);
+}

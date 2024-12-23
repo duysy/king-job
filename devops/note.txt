@@ -1,0 +1,17 @@
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+
+
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+docker rmi $(docker images -q) --force
+docker volume rm $(docker volume ls -q)
+docker network rm $(docker network ls -q)
+docker system prune -a --volumes -f
+
+
+docker-compose run freelancer_platform_api python manage.py migrate
+docker-compose run freelancer_platform_api python manage.py createsuperuser 

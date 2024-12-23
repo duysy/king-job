@@ -1,0 +1,2852 @@
+#### File path start: ./App.test.tsx
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import App from './App';
+
+test('renders learn react link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/learn react/i);
+  expect(linkElement).toBeInTheDocument();
+});
+
+#### File path end: ./App.test.tsx
+#### File path start: ./App.tsx
+import React from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Router from "./Router";
+
+const App: React.FC = () => {
+  return (
+    <div className="App">
+      <Router />
+      <ToastContainer />
+    </div>
+  );
+};
+
+export default App;
+
+#### File path end: ./App.tsx
+#### File path start: ./commons/toast.common.tsx
+import "@/custom-css/customToastStyles.css"; // Custom CSS file for styling
+import { toast, ToastOptions, ToastPosition } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const toastOptions: ToastOptions = {
+  position: "top-right" as ToastPosition,
+  autoClose: 5000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  progress: undefined,
+  className: "custom-toast", // Custom CSS class
+  bodyClassName: "custom-toast-body",
+  progressClassName: "custom-toast-progress",
+};
+
+// Remove string concatenation and use JSX for the icon and message
+const showToast = (
+  message: any,
+  type: "default" | "success" | "error" | "info" | "warning" = "default",
+  options: ToastOptions = {}
+) => {
+  switch (type) {
+    case "success":
+      toast.success(<div>{message}</div>, {
+        ...toastOptions,
+        ...options,
+      });
+      break;
+    case "error":
+      toast.error(<div>{message}</div>, {
+        ...toastOptions,
+        ...options,
+      });
+      break;
+    case "info":
+      toast.info(<div>{message}</div>, {
+        ...toastOptions,
+        ...options,
+      });
+      break;
+    case "warning":
+      toast.warn(<div>{message}</div>, {
+        ...toastOptions,
+        ...options,
+      });
+      break;
+    default:
+      toast(message, { ...toastOptions, ...options });
+  }
+};
+export default showToast;
+
+#### File path end: ./commons/toast.common.tsx
+#### File path start: ./components/Chat/Chat.tsx
+import React, { useState, useRef, useEffect } from "react";
+import { Send, Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+
+interface ChatMessage {
+  id?: number;
+  sender_address: string;
+  sender_name?: string;
+  content: string;
+  created_at?: string;
+}
+
+interface ChatProps {
+  messages: ChatMessage[];
+  currentUserAddress: string;
+  onSendMessage: (message: string) => void;
+  isLoading?: boolean;
+  className?: string;
+}
+
+const Chat: React.FC<ChatProps> = ({
+  messages,
+  currentUserAddress,
+  onSendMessage,
+  isLoading = false,
+  className = "",
+}) => {
+  const [newMessage, setNewMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = () => {
+    if (!newMessage.trim()) return;
+    onSendMessage(newMessage);
+    setNewMessage("");
+  };
+
+  const formatMessageTime = (timestamp?: string) => {
+    if (!timestamp) return "";
+    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+  };
+
+  return (
+    <div className={`flex flex-col bg-white rounded-lg shadow ${className}`}>
+      {/* Chat Header */}
+      <div className="p-4 border-b border-gray-200">
+        <h4 className="text-lg font-semibold text-gray-800">Messages</h4>
+        <p className="text-sm text-gray-500">{messages.length} messages</p>
+      </div>
+
+      {/* Messages Container */}
+      <div
+        ref={chatContainerRef}
+        className="flex-grow overflow-y-auto p-4 space-y-4 max-h-[50vh]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at center, #f0f4f8 2px, transparent 2px)",
+          backgroundSize: "24px 24px",
+        }}
+      >
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            No messages yet. Start the conversation!
+          </div>
+        ) : (
+          messages.map((msg, idx) => {
+            const isCurrentUser = msg.sender_address === currentUserAddress;
+            return (
+              <div
+                key={msg.id || idx}
+                className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[75%] ${
+                    isCurrentUser
+                      ? "bg-blue-500 text-white rounded-l-lg rounded-br-lg"
+                      : "bg-gray-100 text-gray-800 rounded-r-lg rounded-bl-lg"
+                  } p-3 shadow-sm`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm">
+                      {isCurrentUser ? "You" : msg.sender_name || "Unknown"}
+                    </span>
+                    {msg.created_at && (
+                      <span
+                        className={`text-xs ${isCurrentUser ? "text-blue-100" : "text-gray-500"}`}
+                      >
+                        {formatMessageTime(msg.created_at)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="break-words">{msg.content}</p>
+                </div>
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Message Input */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-grow">
+            <input
+              type="text"
+              className="w-full px-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
+              placeholder="Type your message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+            />
+            <button
+              className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full ${
+                newMessage.trim() && !isLoading
+                  ? "text-blue-500 hover:bg-blue-50"
+                  : "text-gray-400"
+              } transition-colors`}
+              onClick={handleSend}
+              disabled={!newMessage.trim() || isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Press Enter to send, Shift + Enter for new line
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Chat;
+
+#### File path end: ./components/Chat/Chat.tsx
+#### File path start: ./components/Footer.tsx
+import React from "react";
+
+const Footer: React.FC = () => {
+  return (
+    <footer className="bg-blue-900 text-white py-10">
+      <div className="container mx-auto text-center">
+        <p className="text-lg font-bold text-yellow-300">
+          © 2024 King Job. All rights reserved.
+        </p>
+        <p className="text-sm mt-2 text-yellow-100">
+          King Job – Your Web3 Career Crown.
+        </p>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+
+#### File path end: ./components/Footer.tsx
+#### File path start: ./components/general/message.tsx
+import { Fragment, useRef } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+
+const Message = (props: any) => {
+  const releaseButtonRef = useRef(null);
+
+  return (
+    <Transition.Root show={true} as={Fragment}>
+      <Dialog
+        as="div"
+        className="relative z-10"
+        initialFocus={releaseButtonRef}
+        onClose={() => {}}
+      >
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center text-center sm:items-center sm:p-0">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <Dialog.Panel
+                className={`relative transform overflow-hidden rounded-lg bg-white text-center shadow-xl transition-all p-4`}
+              >
+                <div className="max-w-md max-h-full overflow-auto p-4">
+                  <div className="text-sm text-start">{props.children}</div>
+                  <button
+                    type="button"
+                    ref={releaseButtonRef}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 mt-4 border-b-4 border-indigo-800 hover:border-indigo-1000 rounded"
+                    onClick={() => props.setMessage("")}
+                  >
+                    OK
+                  </button>
+                </div>
+              </Dialog.Panel>
+            </Transition.Child>
+          </div>
+        </div>
+      </Dialog>
+    </Transition.Root>
+  );
+};
+
+export default Message;
+
+#### File path end: ./components/general/message.tsx
+#### File path start: ./components/NavBar.tsx
+import Logo from "@/assets/logos/logo.jpg";
+import { UrlMapping } from "@/commons/url-mapping.common";
+import { useLogin } from "@/services/apis/auth";
+import { useAuthStore } from "@/services/stores/useAuthStore";
+import { shortenAddress } from "@/utils/transaction_string";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useEffect, useState } from "react";
+import { AiOutlineClose, AiOutlineMenu } from "react-icons/ai";
+import { Link, useNavigate } from "react-router-dom";
+import { useAccount, useDisconnect } from "wagmi";
+
+const NavigationBar = () => {
+  const navigate = useNavigate();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { getWalletAddress, logout, user, login, isAuthenticated } =
+    useAuthStore();
+  const { mutate: loginMutate } = useLogin();
+
+  const { isConnected, address } = useAccount();
+  const { openConnectModal } = useConnectModal();
+  const { disconnect } = useDisconnect();
+
+  const userImage = user?.image || "https://placehold.co/50x50";
+  const walletAddress = getWalletAddress();
+  const handleUserIconClick = () => navigate(UrlMapping.user_info);
+
+  const handleDisconnect = () => {
+    disconnect();
+    logout();
+  };
+
+  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 100);
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isConnected && address) {
+      loginMutate(
+        { wallet_address: address },
+        {
+          onSuccess: async (data) => {
+            try {
+              login(data);
+            } catch (error) {
+              alert("Error setting authentication.");
+            }
+          },
+          onError: (error: any) => {
+            alert(
+              `Login failed: ${error.response?.data?.message || error.message}`
+            );
+          },
+        }
+      );
+    } else {
+      logout();
+    }
+  }, [isConnected, address, loginMutate, logout, login]);
+
+  return (
+    <header
+      className={`bg-gradient-to-r from-indigo-600 to-blue-500 shadow-md fixed w-full top-0 z-50 overflow-hidden${
+        isScrolled ? "scrolled" : ""
+      }`}
+      style={{ position: "sticky", top: 0 }}
+    >
+      <div className="container mx-auto flex flex-col lg:flex-row justify-between items-center py-4 px-6">
+        {/* Logo */}
+        <Link to="/" className="flex items-center space-x-2">
+          <img src={Logo} alt="Logo" className="w-12 h-12 rounded-full" />
+          <h1 className="text-2xl font-bold text-white">King Job</h1>
+        </Link>
+
+        {/* Navigation Links */}
+        <nav
+          className={`${
+            isMenuOpen ? "flex flex-col" : "hidden lg:flex"
+          } lg:flex-row lg:space-x-6 items-center w-full lg:w-auto`}
+        >
+          {[
+            { label: "Home", path: UrlMapping.home },
+            { label: "Jobs", path: UrlMapping.jobs },
+            { label: "Info", path: UrlMapping.info },
+            { label: "How to Use", path: UrlMapping.how_to_use },
+          ].map(({ label, path }) => (
+            <Link
+              key={label}
+              to={path || "#"}
+              className="text-white font-medium hover:underline transition duration-300 mt-2 lg:mt-0"
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Authenticated User or Connect Wallet */}
+        <div
+          className={`${
+            isMenuOpen ? "flex flex-col mt-4 lg:mt-0" : "hidden lg:flex"
+          } items-center lg:space-x-6`}
+        >
+          {isConnected ? (
+            <div className="flex items-center space-x-4">
+              <Link
+                to={UrlMapping.create || "#"}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-5 rounded-full font-medium shadow-lg transition duration-300"
+              >
+                Create job
+              </Link>
+
+              <div
+                className="flex items-center cursor-pointer"
+                onClick={handleUserIconClick}
+              >
+                <img
+                  src={userImage}
+                  alt="User Icon"
+                  className="w-12 h-12 rounded-full border-2 border-white shadow-md"
+                />
+                <span className="text-white font-medium ml-2 hidden sm:inline-block">
+                  {shortenAddress(walletAddress) || "N/A"}
+                </span>
+              </div>
+
+              <button
+                onClick={handleDisconnect}
+                className="bg-red-600 text-white py-2 px-5 rounded-full font-medium shadow-md hover:bg-red-700 transition duration-300"
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={openConnectModal}
+              className="bg-yellow-400 text-blue-800 py-2 px-5 rounded-full font-medium shadow-md hover:bg-yellow-500 transition duration-300"
+            >
+              Connect Wallet
+            </button>
+          )}
+        </div>
+
+        {/* Mobile Menu Toggle */}
+        <div className="lg:hidden mt-4" onClick={toggleMenu}>
+          {isMenuOpen ? (
+            <AiOutlineClose className="text-white w-8 h-8 cursor-pointer" />
+          ) : (
+            <AiOutlineMenu className="text-white w-8 h-8 cursor-pointer" />
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default NavigationBar;
+
+#### File path end: ./components/NavBar.tsx
+#### File path start: ./components/ProtectedRoute.tsx
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "@/services/stores/useAuthStore";
+
+interface ProtectedRouteProps {
+  component: React.ComponentType<any>;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  component: Component,
+}) => {
+  const { isAuthenticated } = useAuthStore();
+  return isAuthenticated ? <Component /> : <Navigate to="/" />;
+};
+
+export default ProtectedRoute;
+
+#### File path end: ./components/ProtectedRoute.tsx
+#### File path start: ./index.tsx
+import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { WagmiProvider } from "wagmi";
+import App from "./App";
+import "./index.css";
+import "./tailwind.css";
+import config from "./web3/wagmi/config";
+
+const queryClient = new QueryClient();
+const container = document.getElementById("root");
+const root = createRoot(container!);
+
+root.render(
+  <React.StrictMode>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  </React.StrictMode>
+);
+
+#### File path end: ./index.tsx
+#### File path start: ./pages/all_jobs/index.tsx
+import { UrlMapping } from "@/commons/url-mapping.common";
+import Footer from "@/components/Footer";
+import NavigationBar from "@/components/NavBar";
+import { useJobs, useJobTypes } from "@/services/apis/core";
+import { getStatusBadgeClass } from "@/utils/colors";
+import { JOB_STATUSES } from "@/utils/const";
+import { formatDistanceToNow } from "date-fns";
+import { formatEther, parseEther } from "ethers";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+interface FilterValues {
+  page?: number;
+  page_size?: number;
+  job_type_id?: number;
+  min_amount?: number;
+  max_amount?: number;
+  search?: string;
+  status?: string;
+}
+
+const AllJobsPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const { data: jobTypes, isLoading: isJobTypesLoading } = useJobTypes();
+
+  const [filterValues, setFilterValues] = useState<FilterValues>({
+    page: 1,
+    page_size: 10,
+    job_type_id: undefined,
+    min_amount: undefined,
+    max_amount: undefined,
+    search: "",
+    status: "",
+  });
+
+  const {
+    data: jobs,
+    isLoading,
+    error,
+  } = useJobs({
+    variables: filterValues,
+  });
+
+  const handleFilterChange = (
+    field: keyof FilterValues,
+    value: string | number | undefined
+  ) => {
+    let parsedValue: number | undefined;
+
+    if (field === "min_amount" || field === "max_amount") {
+      parsedValue = value ? Number(parseEther(value.toString())) : undefined;
+    } else {
+      parsedValue = value as number | undefined;
+    }
+
+    setFilterValues((prev) => ({
+      ...prev,
+      [field]: parsedValue,
+      page: 1,
+    }));
+  };
+
+  return (
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      <NavigationBar />
+
+      <main className="container mx-auto py-16 px-4 md:px-8 flex gap-8">
+        {/* Left Panel: Filters */}
+
+        <div className="rounded-xl flex flex-col">
+          <div className="w-full sticky top-36 self-start">
+            <aside className="w-full max-w-xs bg-white p-6 rounded-lg shadow-md self-start">
+              <h3 className="text-2xl font-bold text-blue-800 mb-4">Filters</h3>
+
+              {/* Search Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Search Title/Description
+                </label>
+                <input
+                  type="text"
+                  className="mt-1 w-full border rounded p-2"
+                  value={filterValues.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                />
+              </div>
+
+              {/* Job Type Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Job Type
+                </label>
+                <select
+                  className="mt-1 w-full border rounded p-2"
+                  value={filterValues.job_type_id || ""}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "job_type_id",
+                      e.target.value ? Number(e.target.value) : undefined
+                    )
+                  }
+                  disabled={isJobTypesLoading}
+                >
+                  <option value="">All</option>
+                  {!isJobTypesLoading &&
+                    jobTypes?.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Min Amount Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Min Amount (BNB)
+                </label>
+                <input
+                  type="number"
+                  className="mt-1 w-full border rounded p-2"
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "min_amount",
+                      e.target.value || undefined
+                    )
+                  }
+                />
+              </div>
+
+              {/* Max Amount Filter */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Max Amount (BNB)
+                </label>
+                <input
+                  type="number"
+                  className="mt-1 w-full border rounded p-2"
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "max_amount",
+                      e.target.value || undefined
+                    )
+                  }
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <select
+                  className="mt-1 w-full border rounded p-2"
+                  value={filterValues.status || ""}
+                  onChange={(e) =>
+                    handleFilterChange("status", e.target.value || undefined)
+                  }
+                >
+                  {JOB_STATUSES.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        {/* Right Panel: Job List */}
+        <section className="flex-1">
+          <h2 className="text-4xl font-bold text-blue-800 mb-6 text-left">
+            All Jobs
+          </h2>
+
+          {isLoading && (
+            <p className="text-center text-gray-600">Loading jobs...</p>
+          )}
+          {error && (
+            <p className="text-center text-red-600">Failed to load jobs.</p>
+          )}
+
+          {!isLoading && jobs && (
+            <ul className="space-y-6">
+              {jobs.length === 0 ? (
+                <p className="text-gray-500">No jobs found.</p>
+              ) : (
+                jobs.map((job) => (
+                  <li
+                    key={job.id}
+                    className="bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition duration-300 flex flex-col md:flex-row gap-6 items-start md:items-center"
+                  >
+                    <div className="flex-1">
+                      <h4 className="text-2xl font-bold text-blue-700">
+                        {job.title}
+                      </h4>
+                      <div className="mt-2 flex flex-wrap gap-2 items-center">
+                        <span
+                          className={`px-3 py-1 text-sm rounded-full ${getStatusBadgeClass(
+                            job.status
+                          )}`}
+                        >
+                          {job.status}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          Created:{" "}
+                          {formatDistanceToNow(new Date(job.created_at), {
+                            addSuffix: true,
+                          })}
+                        </span>
+                      </div>
+                      <p className="mt-4 text-gray-600 text-sm line-clamp-2">
+                        {job.description}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-700 font-semibold text-xl">
+                        {formatEther(job.amount)} BNB
+                      </div>
+                      <button
+                        onClick={() =>
+                          navigate(`${UrlMapping.detail}/${job.id}`)
+                        }
+                        className="mt-4 bg-blue-600 text-white py-2 px-6 rounded-md font-medium hover:bg-blue-700 transition duration-300"
+                      >
+                        View
+                      </button>
+                    </div>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default AllJobsPage;
+
+#### File path end: ./pages/all_jobs/index.tsx
+#### File path start: ./pages/create_job/index.tsx
+import Footer from "@/components/Footer";
+import NavigationBar from "@/components/NavBar";
+import { useUploadFile } from "@/services/apis/auth";
+import { useCreateJob, useJobTypes } from "@/services/apis/core";
+import { Editor } from "@tinymce/tinymce-react";
+import { parseEther } from "ethers";
+import React, { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+
+const CreateJobPage: React.FC = () => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const editRef = useRef<any>(null);
+  const { data: jobTypes, isLoading: isJobTypesLoading } = useJobTypes();
+  const { mutate: createJob, isPending } = useCreateJob();
+  const { mutate: uploadFile, isPending: isPendingUploadFile } =
+    useUploadFile();
+
+  const [uploadedImage, setUploadedImage] = useState<string>("");
+  const [infoValue, setInfoValue] = useState<string>("");
+
+  const handleImageUpload = (file: File) => {
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+
+    uploadFile(uploadData, {
+      onSuccess: (data) => {
+        setUploadedImage(`${data.file_url}`);
+      },
+      onError: (error: any) => {
+        alert(`Error uploading image: ${error.message}`);
+      },
+    });
+  };
+
+  const onSubmit = (data: any) => {
+    data.image = uploadedImage;
+    data.job_type = Number(data.job_type);
+    data.amount = parseEther(data.amount).toString();
+    data.info = infoValue;
+    createJob(data, {
+      onSuccess: () => {
+        alert("Job created successfully!");
+        reset();
+        setUploadedImage("");
+        setInfoValue("");
+      },
+      onError: (error: { message: any }) => {
+        alert(`Error creating job: ${error.message}`);
+      },
+    });
+  };
+
+  return (
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      <NavigationBar />
+      <div className="flex justify-center items-center flex-1 py-16 px-6">
+        <div className="bg-white p-10 rounded-xl shadow-lg w-full max-w-3xl">
+          <h2 className="text-4xl font-bold text-blue-800 mb-8 text-center">
+            Create a Job
+          </h2>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Job Title */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium text-gray-700">
+                Job Title
+              </label>
+              <input
+                type="text"
+                className="w-full mt-2 px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Enter job title"
+                {...register("title", {
+                  required: "Job title is required",
+                })}
+              />
+              {errors.title?.message && (
+                <p className="text-red-500">{String(errors.title.message)}</p>
+              )}
+            </div>
+
+            {/* Job Type */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium text-gray-700">
+                Job Type
+              </label>
+              <select
+                className="w-full mt-2 px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                {...register("job_type", {
+                  required: "Job type is required",
+                })}
+                disabled={isJobTypesLoading}
+              >
+                <option value="" disabled>
+                  {isJobTypesLoading ? "Loading..." : "Select job type"}
+                </option>
+                {jobTypes?.map((type: any) => (
+                  <option key={type.id} value={type.id}>
+                    {type.name}
+                  </option>
+                ))}
+              </select>
+              {errors.job_type?.message && (
+                <p className="text-red-500">
+                  {String(errors.job_type.message)}
+                </p>
+              )}
+            </div>
+
+            {/* Job Description */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium text-gray-700">
+                Short Description
+              </label>
+              <textarea
+                className="w-full mt-2 px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Short job description (plain text)"
+                rows={5}
+                {...register("description", {
+                  required: "Description is required",
+                })}
+              ></textarea>
+              {errors.description?.message && (
+                <p className="text-red-500">
+                  {String(errors.description.message)}
+                </p>
+              )}
+            </div>
+
+            {/* Detailed Info (TinyMCE) */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium text-gray-700 mb-2">
+                Detailed Info (Rich Content)
+              </label>
+              <div className="border border-gray-300 rounded-md">
+                <Editor
+                  ref={editRef}
+                  apiKey="7izjmy1cqcphsapox298nx58brynu3kw51ljtoaj677nd7at"
+                  value={infoValue}
+                  init={{
+                    branding: false,
+                    height: 500,
+                    menubar: false,
+                    plugins:
+                      "link image media table codesample fullscreen preview code lists",
+
+                    toolbar:
+                      "undo redo | bold italic | alignleft aligncenter alignright | bullist numlist | link image media | fullscreen preview code",
+                  }}
+                  onEditorChange={(content) => {
+                    setInfoValue(content);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium text-gray-700">
+                Amount (Payment)
+              </label>
+              <input
+                type="number"
+                className="w-full mt-2 px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                placeholder="Enter payment amount"
+                {...register("amount", { required: "Amount is required" })}
+              />
+              {errors.amount?.message && (
+                <p className="text-red-500">{String(errors.amount.message)}</p>
+              )}
+            </div>
+
+            {/* Job Image */}
+            <div className="mb-6">
+              <label className="block text-lg font-medium text-gray-700">
+                Job Image (Optional)
+              </label>
+              <input
+                type="file"
+                className="w-full mt-2 px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleImageUpload(file);
+                  }
+                }}
+              />
+              {isPendingUploadFile ? (
+                <div className="mt-4">
+                  <h4 className="text-lg font-medium text-gray-700">
+                    Uploading...
+                  </h4>
+                  <div className="animate-pulse flex flex-col space-y-4">
+                    <div className="h-48 bg-gray-200 rounded-md"></div>
+                  </div>
+                </div>
+              ) : (
+                uploadedImage && (
+                  <div className="mt-4">
+                    <h4 className="text-lg font-medium text-gray-700">
+                      Preview:
+                    </h4>
+                    <p className="text-green-500 mt-2">
+                      Image uploaded successfully!
+                    </p>
+                    <img
+                      src={uploadedImage}
+                      alt="Uploaded Preview"
+                      className="w-full h-auto rounded-md shadow-md mt-2"
+                    />
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full bg-yellow-400 text-blue-800 py-3 px-6 rounded-full font-semibold shadow-md hover:bg-yellow-500 hover:shadow-lg transition-all duration-300 mt-8"
+              disabled={isPending}
+            >
+              {isPending ? "Submitting..." : "Create Job"}
+            </button>
+          </form>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default CreateJobPage;
+
+#### File path end: ./pages/create_job/index.tsx
+#### File path start: ./pages/home/index.tsx
+import { UrlMapping } from "@/commons/url-mapping.common";
+import Footer from "@/components/Footer";
+import NavigationBar from "@/components/NavBar";
+import { useNewestJobs, useTopFreelancers } from "@/services/apis/core";
+import { useAuthStore } from "@/services/stores/useAuthStore";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { formatDistanceToNow } from "date-fns";
+import { formatEther } from "ethers";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+const HomePage: React.FC = () => {
+  const { openConnectModal } = useConnectModal();
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+
+  // Fetch top freelancers and newest jobs
+  const { data: topFreelancers, isLoading: isFreelancersLoading } =
+    useTopFreelancers();
+  const { data: newestJobs, isLoading: isNewestJobsLoading } = useNewestJobs();
+
+  return (
+    <div className="bg-white min-h-screen">
+      <NavigationBar />
+
+      {/* Hero Section */}
+      <section className="relative pt-16 pb-32 bg-gradient-to-r from-blue-800 to-purple-800 text-white">
+        <div className="container mx-auto flex flex-col lg:flex-row items-center gap-12 px-5 lg:px-16">
+          {/* Left Column - Intro Text */}
+          <div className="lg:w-1/2">
+            <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+              Discover & Hire <br /> Top Freelancers
+            </h1>
+            <p className="mb-8 text-lg">
+              Connect with talented professionals and explore the latest job
+              opportunities.
+            </p>
+            {!isAuthenticated ? (
+              <button
+                className="bg-yellow-400 text-blue-800 py-3 px-8 rounded-full font-semibold shadow-md hover:bg-yellow-500 hover:shadow-lg transition-all duration-300"
+                onClick={openConnectModal}
+              >
+                Connect Wallet
+              </button>
+            ) : null}
+          </div>
+
+          {/* Right Column - Larger Image */}
+          <div className="lg:w-1/2 flex justify-center lg:justify-end">
+            <img
+              src="/banner.png"
+              alt="Freelancer illustration"
+              className="w-full lg:w-[90%] xl:w-[100%] object-cover rounded-lg shadow-lg"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Top Freelancers */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-5 lg:px-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-10">
+            Our Top Freelancers
+          </h2>
+          {isFreelancersLoading ? (
+            <p className="text-center text-gray-500">Loading freelancers...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+              {(!topFreelancers || topFreelancers.length < 1) && (
+                <div className="col-span-full text-center text-gray-600">
+                  No freelancers found.
+                </div>
+              )}
+
+              {topFreelancers?.map((freelancer) => (
+                <div
+                  key={freelancer.id}
+                  className="bg-white rounded-lg shadow-md hover:shadow-lg p-6 flex items-center cursor-pointer transition-shadow duration-300"
+                  onClick={() =>
+                    navigate(
+                      `${UrlMapping.resume}/${freelancer.wallet_address}`
+                    )
+                  }
+                >
+                  {/* Avatar */}
+                  <div className="w-16 h-16 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-2xl mr-5 shadow-md">
+                    {freelancer.name?.charAt(0) ||
+                      freelancer.username?.charAt(0) ||
+                      "F"}
+                  </div>
+                  {/* Info */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700">
+                      {freelancer.name || freelancer.username}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Completed Jobs: {freelancer.completed_jobs_count}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Newest Jobs */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-5 lg:px-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-10">
+            Latest Jobs
+          </h2>
+          {isNewestJobsLoading ? (
+            <p className="text-center text-gray-500">Loading jobs...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+              {(!newestJobs || newestJobs.length < 1) && (
+                <div className="col-span-full text-center text-gray-600">
+                  No jobs available yet.
+                </div>
+              )}
+
+              {newestJobs?.map((job) => (
+                <div
+                  key={job.id}
+                  onClick={() => navigate(`${UrlMapping.detail}/${job.id}`)}
+                  className="bg-gray-50 rounded-lg shadow-md hover:shadow-lg overflow-hidden transition-shadow duration-300 flex flex-col cursor-pointer"
+                >
+                  {/* Job image */}
+                  <img
+                    src={job.image || "https://placehold.co/600x400"}
+                    alt={job.title}
+                    className="w-full h-48 object-cover"
+                  />
+                  {/* Job info */}
+                  <div className="p-5 flex flex-col flex-grow">
+                    <h3 className="text-xl font-bold text-gray-700 mb-2">
+                      {job.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 flex-grow">
+                      {job.description}
+                    </p>
+                    <div className="flex justify-between items-center mt-4">
+                      <span className="font-semibold text-green-600">
+                        {formatEther(job.amount)} BSC
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {formatDistanceToNow(new Date(job.created_at), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default HomePage;
+
+#### File path end: ./pages/home/index.tsx
+#### File path start: ./pages/how_to_use/index.tsx
+import NavigationBar from "@/components/NavBar";
+import React from "react";
+
+const HowToUsePage: React.FC = () => {
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <NavigationBar />
+
+      <main className="container mx-auto py-16 px-6 md:px-20">
+        <h2 className="text-5xl font-bold text-blue-800 mb-12 text-center">
+          How to Use King Job
+        </h2>
+
+        {/* Getting Started Section */}
+        <section className="bg-white p-10 rounded-xl shadow-lg mb-16">
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            Getting Started
+          </h3>
+          <p className="text-lg text-gray-700 leading-relaxed mb-6">
+            King Job connects clients and freelancers in a seamless Web3-powered
+            platform. To get started, you need to connect your wallet. Click on
+            the <strong>"Connect Wallet"</strong> button at the top of the page.
+          </p>
+          <h4 className="text-2xl font-semibold text-blue-600 mb-4">
+            How to Connect Your Wallet
+          </h4>
+          <ol className="list-decimal list-inside mb-6 text-gray-700">
+            <li>
+              Click the <strong>"Connect Wallet"</strong> button.
+            </li>
+            <li>
+              Choose a supported wallet option (e.g., Rainbow Wallet, MetaMask,
+              Binance Wallet, or others).
+            </li>
+            <li>
+              Follow the instructions to link your wallet to the platform.
+            </li>
+            <li>Once connected, you can start creating or picking jobs!</li>
+          </ol>
+        </section>
+
+        {/* Creating a Job Section */}
+        <section className="bg-white p-10 rounded-xl shadow-lg mb-16">
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            Creating a Job
+          </h3>
+          <ol className="list-decimal list-inside text-gray-700">
+            <li>
+              Navigate to the <strong>"Create Job"</strong> section.
+            </li>
+            <li>
+              Fill out the job form with the following details:
+              <ul className="list-disc list-inside ml-6">
+                <li>
+                  <strong>Title:</strong> A concise job title.
+                </li>
+                <li>
+                  <strong>Description:</strong> A detailed overview of the work
+                  required.
+                </li>
+                <li>
+                  <strong>Payment Amount:</strong> Specify how much you’ll pay
+                  the freelancer upon completion.
+                </li>
+                <li>
+                  <strong>Deadline:</strong> Set a timeframe for the job.
+                </li>
+              </ul>
+            </li>
+            <li>
+              Submit the form. First, your job details will be saved on the
+              platform. Then, you can push it to the blockchain to make it
+              available for freelancers.
+            </li>
+          </ol>
+        </section>
+
+        {/* Picking a Job Section */}
+        <section className="bg-white p-10 rounded-xl shadow-lg mb-16">
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            Picking a Job
+          </h3>
+          <ol className="list-decimal list-inside text-gray-700">
+            <li>
+              Browse jobs in the <strong>"Find Jobs"</strong> section.
+            </li>
+            <li>
+              Click on a job to view details, including requirements and
+              payment.
+            </li>
+            <li>
+              If interested, click the <strong>"Pick Job"</strong> button.
+            </li>
+            <li>
+              Initiate a discussion with the client via the built-in chat to
+              clarify details and agree on terms.
+            </li>
+            <li>
+              Once the client approves, your address will be added to the job's
+              blockchain record.
+            </li>
+          </ol>
+        </section>
+
+        {/* Completing a Job Section */}
+        <section className="bg-white p-10 rounded-xl shadow-lg mb-16">
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            Completing a Job
+          </h3>
+          <ol className="list-decimal list-inside text-gray-700">
+            <li>After reaching an agreement, begin work on the job.</li>
+            <li>
+              Once completed, submit the deliverables to the client for review.
+              You will also need to message the client to ensure they review and
+              finalize the result.
+            </li>
+            <li>
+              The client will review your work and, if satisfied, approve the
+              job on the blockchain.
+            </li>
+            <li>
+              Upon approval, payment will be released directly to your wallet.
+            </li>
+          </ol>
+        </section>
+
+        {/* Tracking Jobs Section */}
+        <section className="bg-white p-10 rounded-xl shadow-lg">
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            Tracking Jobs
+          </h3>
+          <ol className="list-decimal list-inside text-gray-700">
+            <li>
+              Clients can track all active jobs in the{" "}
+              <strong>"My Jobs"</strong> section.
+            </li>
+            <li>
+              Freelancers can view the jobs they’ve picked in the{" "}
+              <strong>"My Work"</strong> section.
+            </li>
+            <li>
+              Real-time updates for job progress and payment status are visible
+              directly on the blockchain.
+            </li>
+          </ol>
+          <p className="text-lg text-gray-700 leading-relaxed mt-4">
+            With transparency and security at its core, King Job ensures trust
+            between clients and freelancers throughout the process.
+          </p>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default HowToUsePage;
+
+#### File path end: ./pages/how_to_use/index.tsx
+#### File path start: ./pages/info/index.tsx
+import NavigationBar from "@/components/NavBar";
+import React from "react";
+
+const InfoPage: React.FC = () => {
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <NavigationBar />
+
+      <main className="container mx-auto py-16 px-6 md:px-20">
+        <h2 className="text-5xl font-bold text-blue-800 mb-12 text-center">
+          About King Job
+        </h2>
+
+        <section className="bg-white p-10 rounded-xl shadow-lg mb-16">
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">Our Mission</h3>
+          <p className="text-lg text-gray-700 leading-relaxed mb-10">
+            At King Job, our mission is to connect clients and freelancers
+            seamlessly through the power of Web3 technology. We aim to provide a
+            secure, transparent, and efficient platform for job creation and
+            collaboration, empowering both clients and freelancers to achieve
+            their goals.
+          </p>
+
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">Our Vision</h3>
+          <p className="text-lg text-gray-700 leading-relaxed mb-10">
+            We envision a future where freelancers and clients collaborate
+            globally without barriers. Through blockchain technology, we strive
+            to build a trustworthy ecosystem where job opportunities are
+            accessible to everyone, and payments are secure and instantaneous.
+          </p>
+
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">Why Web3?</h3>
+          <p className="text-lg text-gray-700 leading-relaxed mb-10">
+            Web3 technology underpins our platform, enabling:
+          </p>
+          <ul className="list-disc list-inside text-lg text-gray-700 mb-10">
+            <li>
+              <strong>Transparency:</strong> Every transaction is recorded on
+              the blockchain, ensuring traceability and trust.
+            </li>
+            <li>
+              <strong>Security:</strong> Smart contracts guarantee that payments
+              are released only when agreed-upon conditions are met.
+            </li>
+            <li>
+              <strong>Efficiency:</strong> Direct interactions between clients
+              and freelancers reduce delays and middleman fees.
+            </li>
+          </ul>
+
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            How King Job Works
+          </h3>
+          <p className="text-lg text-gray-700 leading-relaxed mb-10">
+            King Job facilitates seamless collaboration between clients and
+            freelancers:
+          </p>
+          <ul className="list-disc list-inside text-lg text-gray-700 mb-10">
+            <li>
+              <strong>Clients:</strong> Post jobs on the platform, define
+              requirements, and set payment terms.
+            </li>
+            <li>
+              <strong>Freelancers:</strong> Browse available jobs, pick the ones
+              that match their skills, and communicate with clients to finalize
+              terms.
+            </li>
+            <li>
+              <strong>Onchain Transactions:</strong> Once terms are agreed upon,
+              smart contracts ensure secure payments upon successful completion.
+            </li>
+          </ul>
+
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            Why Choose King Job?
+          </h3>
+          <ul className="list-disc list-inside text-lg text-gray-700 mb-10">
+            <li>
+              <strong>Trust:</strong> Blockchain ensures all interactions and
+              transactions are transparent and verifiable.
+            </li>
+            <li>
+              <strong>Global Reach:</strong> Connect with clients and
+              freelancers worldwide without geographical limitations.
+            </li>
+            <li>
+              <strong>Innovation:</strong> King Job combines modern technology
+              with a user-friendly interface to create a streamlined experience.
+            </li>
+          </ul>
+
+          <h3 className="text-3xl font-bold text-blue-700 mb-6">
+            Future Development
+          </h3>
+          <p className="text-lg text-gray-700 leading-relaxed mb-10">
+            We are continuously improving King Job to provide even more value to
+            our users. Our plans include:
+          </p>
+          <ul className="list-disc list-inside text-lg text-gray-700">
+            <li>
+              Advanced Analytics: Gain insights into job performance and
+              freelancer contributions.
+            </li>
+            <li>
+              Expanded Features: Introduce tools for effective project
+              management and collaboration.
+            </li>
+            <li>
+              Enhanced Onboarding: Simplify the process for new users to join
+              and engage with the platform.
+            </li>
+          </ul>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default InfoPage;
+
+#### File path end: ./pages/info/index.tsx
+#### File path start: ./pages/job_details/index.tsx
+import Footer from "@/components/Footer";
+import NavigationBar from "@/components/NavBar";
+import { JobStatus, useJobDetails, usePickJob } from "@/services/apis/core"; // Added usePickJob
+import { getStatusBadgeClass } from "@/utils/colors";
+import { formatDistanceToNow } from "date-fns";
+import { formatEther } from "ethers";
+import React from "react";
+import { useParams } from "react-router-dom";
+
+const JobDetailsPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+
+  const {
+    data: job,
+    isLoading,
+    error,
+  } = useJobDetails({ variables: { id: Number(id) } });
+
+  const { mutate: pickJob, isPending: isPicking } = usePickJob();
+
+  const handlePickJob = () => {
+    if (!id) return;
+    pickJob(
+      { jobId: Number(id) },
+      {
+        onSuccess: (message) => {
+          alert(message); // Show success message
+        },
+        onError: (error: any) => {
+          alert(
+            error.response?.data?.detail || "Failed to pick the job. Try again."
+          );
+        },
+      }
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex flex-col">
+        <NavigationBar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-gray-600 text-lg animate-pulse">
+            Loading job details...
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <div className="bg-gray-50 min-h-screen flex flex-col">
+        <NavigationBar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-red-600 text-lg">
+            Job not found or an error occurred. Please try again later.
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      <NavigationBar />
+      <main className="flex-1 container mx-auto py-12 px-6 md:px-20">
+        {/* Job Header */}
+        <section className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-blue-900 mb-4">{job.title}</h1>
+          <p className="text-lg text-gray-700">
+            <span className="font-semibold">Posted by:</span>{" "}
+            <span className="text-blue-700">
+              {job.client?.username || "Unknown"}
+            </span>
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            {`Posted ${formatDistanceToNow(new Date(job.created_at), {
+              addSuffix: true,
+            })}`}
+          </p>
+        </section>
+
+        {/* Job Image */}
+        <div className="relative mb-10">
+          <img
+            src={job.image || "https://placehold.co/600x400"}
+            alt={job.title}
+            className="w-full max-h-[60vh] rounded-lg object-cover shadow-lg"
+          />
+        </div>
+
+        {/* Job Details */}
+        <section className="bg-white rounded-lg p-8 shadow-md mb-16">
+          <h2 className="text-3xl font-bold text-blue-800 mb-6">Description</h2>
+          <p className="text-lg text-gray-700 leading-relaxed mb-8">
+            {job.description}
+          </p>
+          {job.info && (
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-blue-800 ">Details</h2>
+              <div
+                className="prose max-w-none mt-3"
+                dangerouslySetInnerHTML={{ __html: job.info }}
+              />
+            </div>
+          )}
+
+          {/* Info Section */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Payment Section */}
+            <div className="text-center md:text-left">
+              <h4 className="text-lg font-semibold text-blue-700">Payment</h4>
+              <p className="text-xl text-gray-800 mt-2">
+                {formatEther(job.amount)} BNB
+              </p>
+            </div>
+
+            {/* Type Section */}
+            <div className="text-center md:text-left">
+              <h4 className="text-lg font-semibold text-blue-700">Type</h4>
+              <p className="text-xl text-gray-800 mt-2">
+                {job.job_type?.name || "Unknown"}
+              </p>
+            </div>
+
+            {/* Status Section */}
+            <div className="text-center md:text-left">
+              <h4 className="text-lg font-semibold text-blue-700">Status</h4>
+              <div className="mt-2 inline-flex items-center gap-2">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(
+                    job.status
+                  )}`}
+                >
+                  {job.status}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          {job.status === JobStatus.PUSHED && (
+            <div className="mt-12 flex justify-center">
+              <button
+                className={`w-64 py-3 text-white text-xl font-semibold rounded-lg shadow-lg transition-all ${
+                  isPicking
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+                onClick={handlePickJob}
+                disabled={isPicking}
+              >
+                {isPicking ? "Processing..." : "Pick This Job"}
+              </button>
+            </div>
+          )}
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default JobDetailsPage;
+
+#### File path end: ./pages/job_details/index.tsx
+#### File path start: ./pages/job_found/index.tsx
+import Chat from "@/components/Chat/Chat";
+import Footer from "@/components/Footer";
+import NavigationBar from "@/components/NavBar";
+import {
+  useFetchChatMessages,
+  useJobDetails,
+  useSendChatMessage,
+} from "@/services/apis/core";
+import { useAuthStore } from "@/services/stores/useAuthStore";
+import { getStatusBadgeClass } from "@/utils/colors";
+import { formatDistanceToNow } from "date-fns";
+import { formatEther } from "ethers";
+import React from "react";
+import { useParams } from "react-router-dom";
+
+const JobFoundPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const {
+    data: job,
+    isLoading: isLoadingJob,
+    error: jobError,
+  } = useJobDetails({
+    variables: { id: Number(id) },
+  });
+
+  const { getWalletAddress } = useAuthStore();
+  const walletAddress = getWalletAddress();
+
+  const { data: chatMessages, refetch: refetchChatMessages } =
+    useFetchChatMessages({
+      variables: {
+        jobId: Number(id),
+        userA: job?.client?.wallet_address || "",
+        userB: walletAddress,
+      },
+    });
+
+  const { mutate: sendMessage, isPending: isSendingMessage } =
+    useSendChatMessage();
+
+  const handleSendMessage = (message: string) => {
+    if (!job?.client?.wallet_address) return;
+
+    sendMessage(
+      {
+        jobId: Number(id),
+        content: message,
+        receiver_address: job.client.wallet_address,
+      },
+      {
+        onSuccess: () => {
+          refetchChatMessages();
+        },
+        onError: () => {
+          alert("Failed to send message.");
+        },
+      }
+    );
+  };
+
+  if (isLoadingJob) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <NavigationBar />
+        <div className="text-center mt-20">Loading job details...</div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (jobError || !job) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <NavigationBar />
+        <div className="text-center mt-20">
+          Job not found or an error occurred.
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <NavigationBar />
+      <main className="container mx-auto py-10 flex space-x-8">
+        {/* Left Panel: Job Info */}
+        <div className="w-1/2 bg-white rounded-xl p-8 shadow-md">
+          <h2 className="text-5xl font-bold text-blue-800 mb-4">{job.title}</h2>
+          <p className="text-lg text-gray-600 mb-4">
+            Posted by: {job.client?.username || "Unknown"}
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            Created{" "}
+            {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+          </p>
+          <img
+            src={job.image || "https://placehold.co/150x150"}
+            alt={job.title}
+            className="w-full rounded-lg object-cover shadow-lg mb-6"
+          />
+          <p className="text-xl text-gray-700 leading-relaxed mb-8">
+            {job.description}
+          </p>
+          {job.info && (
+            <div
+              className="prose max-w-none mb-8"
+              dangerouslySetInnerHTML={{ __html: job.info }}
+            />
+          )}
+          <div className="mb-6">
+            <h4 className="text-2xl font-bold text-blue-700">Amount</h4>
+            <p className="text-lg text-gray-600 mt-2">
+              {formatEther(job.amount)} BNB
+            </p>
+          </div>
+          <div className="mb-6">
+            <h4 className="text-2xl font-bold text-blue-700">Job Type</h4>
+            <p className="text-lg text-gray-600 mt-2">
+              {job.job_type?.name || "Unknown"}
+            </p>
+          </div>
+          <div>
+            <h4 className="text-2xl font-bold text-blue-700">Status</h4>
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(
+                job.status
+              )}`}
+            >
+              {job.status}
+            </span>
+          </div>
+        </div>
+
+        {/* Right Panel: Chat */}
+        <div className="w-1/2 bg-white rounded-xl p-8 shadow-md flex flex-col">
+          <div className="w-full sticky top-36 self-start">
+            <Chat
+              messages={chatMessages || []}
+              currentUserAddress={walletAddress}
+              onSendMessage={handleSendMessage}
+              isLoading={isSendingMessage}
+              className="flex-grow"
+            />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default JobFoundPage;
+
+#### File path end: ./pages/job_found/index.tsx
+#### File path start: ./pages/job_picker/index.tsx
+import { UrlMapping } from "@/commons/url-mapping.common";
+import Chat from "@/components/Chat/Chat";
+import Footer from "@/components/Footer";
+import NavigationBar from "@/components/NavBar";
+import { useAcceptJob } from "@/hooks/useAcceptJob";
+import { useCompleteJob } from "@/hooks/useCompleteJob";
+import {
+  IUserInfoProfileSchema,
+  JobStatus,
+  useFetchChatMessages,
+  useJobDetails,
+  useJobPickers,
+  useSendChatMessage,
+} from "@/services/apis/core";
+import { useAuthStore } from "@/services/stores/useAuthStore";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+const JobPickersPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const jobId = Number(id);
+
+  const [selectedPicker, setSelectedPicker] =
+    useState<IUserInfoProfileSchema | null>(null);
+
+  const { accept } = useAcceptJob();
+  const { complete } = useCompleteJob();
+  const navigate = useNavigate();
+
+  const {
+    data: job,
+    isLoading: isJobLoading,
+    error: jobError,
+  } = useJobDetails({ variables: { id: jobId } });
+
+  const { data: pickers, isLoading: arePickersLoading } = useJobPickers({
+    variables: { jobId },
+  });
+
+  const { getWalletAddress } = useAuthStore();
+  const walletAddress = getWalletAddress();
+
+  const { data: chatMessages, refetch: refetchChatMessages } =
+    useFetchChatMessages({
+      variables: {
+        jobId,
+        userA: selectedPicker?.wallet_address,
+        userB: walletAddress,
+      },
+    });
+
+  const { mutate: sendMessage, isPending: isSendingMessage } =
+    useSendChatMessage();
+
+  useEffect(() => {
+    if (pickers && pickers.length > 0) {
+      setSelectedPicker(pickers[0]);
+    }
+  }, [pickers]);
+
+  const handleSendMessage = (message: string) => {
+    if (!selectedPicker?.wallet_address) return;
+
+    sendMessage(
+      {
+        jobId,
+        content: message,
+        receiver_address: selectedPicker.wallet_address,
+      },
+      {
+        onSuccess: () => {
+          refetchChatMessages();
+        },
+        onError: () => alert("Failed to send message."),
+      }
+    );
+  };
+
+  const handleAcceptJob = () => {
+    if (!job || !selectedPicker) return;
+    accept({
+      jobId: Number(job.id),
+      freelancer: selectedPicker.wallet_address,
+    });
+  };
+
+  const handleCompleteJob = () => {
+    if (!job || !selectedPicker) return;
+    complete({ jobId: Number(job.id) });
+  };
+
+  if (isJobLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <NavigationBar />
+        <div className="text-center mt-20">Loading job details...</div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (jobError || !job) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <NavigationBar />
+        <div className="text-center mt-20">
+          Job not found or an error occurred.
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const canAcceptJob = job.status === JobStatus.PUSHED && selectedPicker;
+  const canCompleteJob =
+    job.status === JobStatus.ACCEPTED &&
+    selectedPicker &&
+    job.freelancer?.wallet_address === selectedPicker.wallet_address;
+
+  return (
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      <NavigationBar />
+
+      <div className="flex flex-grow container mx-auto py-10">
+        {/* Left Sidebar: List of Pickers */}
+        <div className="w-1/3 bg-white shadow-md rounded-lg p-6 overflow-auto">
+          <h3 className="text-2xl font-bold text-blue-800 mb-6">Job Pickers</h3>
+          {arePickersLoading ? (
+            <p className="text-gray-600">Loading pickers...</p>
+          ) : pickers && pickers.length > 0 ? (
+            <ul>
+              {pickers.map((picker) => (
+                <li
+                  key={picker.id}
+                  className={`p-4 rounded-lg mb-4 cursor-pointer hover:bg-blue-50 transition ${
+                    selectedPicker?.id === picker.id
+                      ? "bg-blue-100"
+                      : "bg-white"
+                  }`}
+                  onClick={() => setSelectedPicker(picker)}
+                >
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={picker.image || "https://placehold.co/150x150"}
+                      alt={picker.name || `${picker.username?.slice(0, 20)}...`}
+                      className="w-12 h-12 rounded-full"
+                    />
+                    <div>
+                      <h4 className="text-lg font-semibold">
+                        {picker.name || `${picker.username?.slice(0, 20)}...`}
+                      </h4>
+                      <p className="text-gray-500 text-sm cursor-pointer">
+                        {picker.wallet_address}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-600">No pickers found for this job.</p>
+          )}
+        </div>
+
+        {/* Right Panel: Picker Info and Chat */}
+        <div className="w-2/3 bg-white shadow-md rounded-lg p-6 flex flex-col">
+          {selectedPicker ? (
+            <>
+              {/* Picker Info */}
+              <div className="flex items-center mb-6">
+                <img
+                  src={selectedPicker.image || "https://placehold.co/150x150"}
+                  alt={selectedPicker.name || selectedPicker.username}
+                  className="w-28 h-28 rounded-full mr-3"
+                />
+                <div className="ml-4">
+                  <h4 className="text-xl font-bold text-blue-800 mb-2">
+                    {selectedPicker.name ||
+                      `${selectedPicker.username?.slice(0, 20)}...`}
+                  </h4>
+                  {selectedPicker.bio && (
+                    <p className="text-gray-600 mb-2">{selectedPicker.bio}</p>
+                  )}
+                  <span className="font-mono">
+                    <b>{selectedPicker.wallet_address}</b>{" "}
+                  </span>
+                  <a
+                    href={`${UrlMapping.resume}/${selectedPicker.wallet_address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg text-blue-600 hover:underline ml-5"
+                  >
+                    View Resume
+                  </a>
+                </div>
+
+                {canAcceptJob && (
+                  <button
+                    onClick={handleAcceptJob}
+                    className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition ml-8"
+                  >
+                    Accept Freelancer
+                  </button>
+                )}
+                {canCompleteJob && (
+                  <button
+                    onClick={handleCompleteJob}
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition ml-8"
+                  >
+                    Complete & Pay
+                  </button>
+                )}
+                {job.status && (
+                  <div className="bg-green-500 text-white px-4 py-2 rounded-full ml-8">
+                    {job.status}
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Section */}
+              <Chat
+                messages={chatMessages || []}
+                currentUserAddress={walletAddress}
+                onSendMessage={handleSendMessage}
+                isLoading={isSendingMessage}
+                className="flex-grow"
+              />
+            </>
+          ) : (
+            <p className="text-center text-gray-600">
+              Select a picker to view their details and chat.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default JobPickersPage;
+
+#### File path end: ./pages/job_picker/index.tsx
+#### File path start: ./pages/NotFoundPage.tsx
+import React from "react";
+import { Link } from "react-router-dom";
+
+const NotFoundPage: React.FC = () => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-800 to-purple-800 text-white">
+      <h1 className="text-6xl font-bold mb-4">404</h1>
+      <p className="text-2xl mb-8 text-center px-3">
+        Oops! The page you are looking for does not exist.
+      </p>
+      <Link
+        to="/"
+        className="bg-purple-500 px-6 py-3 rounded-lg text-white hover:bg-purple-600"
+      >
+        Go Back Home
+      </Link>
+    </div>
+  );
+};
+
+export default NotFoundPage;
+
+#### File path end: ./pages/NotFoundPage.tsx
+#### File path start: ./pages/resume/index.tsx
+import NavigationBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
+import { useUserResume } from "@/services/apis/core";
+import React from "react";
+import { useParams } from "react-router-dom";
+import { formatEther } from "ethers";
+
+const ResumePage: React.FC = () => {
+  const { walletAddress } = useParams<{ walletAddress: string }>();
+  const {
+    data: userInfo,
+    isLoading,
+    error,
+  } = useUserResume({ variables: { walletAddress: walletAddress || "" } });
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <NavigationBar />
+        <div className="text-center mt-20 text-gray-600">Loading resume...</div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !userInfo) {
+    return (
+      <div className="bg-gray-50 min-h-screen">
+        <NavigationBar />
+        <div className="text-center mt-20 text-red-600">
+          Failed to load resume. Please try again.
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <NavigationBar />
+      <main className="max-w-[1000px] mx-auto py-16 px-6 md:px-20 bg-white shadow-lg rounded-lg my-10">
+        {/* Header Section */}
+        <section className="flex items-center gap-6 mb-12">
+          <img
+            src={userInfo.image || "https://placehold.co/150x150"}
+            alt="User Avatar"
+            className="w-24 h-24 rounded-full border-2 border-blue-500"
+          />
+          <div>
+            <h1 className="text-4xl font-bold text-gray-800">
+              {userInfo.name || "Anonymous"}
+            </h1>
+            <p className="text-gray-500">{userInfo.username}</p>
+            <p className="text-blue-500">{userInfo.wallet_address}</p>
+          </div>
+        </section>
+
+        {/* Bio Section */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Bio</h2>
+          <p className="text-lg text-gray-600">
+            {userInfo.bio || "No bio available"}
+          </p>
+        </section>
+
+        {/* Social Links */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Social Links
+          </h2>
+          <ul className="flex flex-wrap gap-4">
+            {Object.entries(userInfo.social_links || {}).map(
+              ([key, value]) =>
+                value && (
+                  <li key={key}>
+                    <a
+                      href={value}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                    </a>
+                  </li>
+                )
+            )}
+          </ul>
+        </section>
+
+        {/* Completed Projects */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Completed Projects
+          </h2>
+          <ul className="space-y-6">
+            {userInfo.completed_projects.map((project) => (
+              <li
+                key={project.id}
+                className="p-6 border rounded-lg shadow-sm bg-gray-50"
+              >
+                <h3 className="text-xl font-semibold text-blue-800">
+                  {project.title}
+                </h3>
+                <p className="text-gray-600 mt-2">{project.description}</p>
+                <div className="mt-4 text-gray-500">
+                  <span className="font-bold">Amount Earned:</span>{" "}
+                  {formatEther(project.amount)} BNB
+                </div>
+                <div className="text-gray-400 text-sm">
+                  Completed At:{" "}
+                  {new Date(project.completed_at).toLocaleDateString()}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Total Income */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            Total Income
+          </h2>
+          <p className="text-green-600 font-bold text-3xl">
+            {formatEther(userInfo.total_income)} BNB
+          </p>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default ResumePage;
+
+#### File path end: ./pages/resume/index.tsx
+#### File path start: ./pages/user_info/components/FindJobTab.tsx
+import { UrlMapping } from "@/commons/url-mapping.common";
+import { useCreateJob } from "@/hooks/useCreateJob";
+import { useJobsByFreelancer } from "@/services/apis/core";
+import { getStatusBadgeClass } from "@/utils/colors";
+import { formatDistanceToNow } from "date-fns";
+import { formatEther } from "ethers";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const FindJobTab: React.FC = () => {
+  const {
+    data: userJobs,
+    isLoading: isJobsLoading,
+    error: errorJobsLoading,
+  } = useJobsByFreelancer();
+
+  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
+  const {
+    create,
+    isLoading,
+    isSuccess,
+    error,
+    reset,
+    hash: transactionHash,
+  } = useCreateJob();
+  const navigate = useNavigate();
+
+  const handleWithdrawFunds = (jobId: number, jobAmount: string) => {
+    setCurrentJobId(jobId);
+    create({ jobId, amount: jobAmount });
+  };
+
+  if (isJobsLoading) {
+    return <div className="text-center py-8">Loading jobs...</div>;
+  }
+
+  if (errorJobsLoading) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Error loading jobs. Please try again later.
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-3xl shadow-2xl">
+      <h2 className="text-3xl font-extrabold text-blue-800 mb-6 text-center">
+        Find Jobs
+      </h2>
+      {userJobs && userJobs.length > 0 ? (
+        <div className="space-y-4">
+          {userJobs.map((job) => (
+            <div
+              key={job.id}
+              className="p-6 border rounded-lg shadow-lg bg-gray-50 hover:bg-white transition ease-in-out duration-300"
+            >
+              <div className="flex items-center space-x-6">
+                <img
+                  src={job.image || "https://via.placeholder.com/150"}
+                  alt={job.title}
+                  className="w-24 h-24 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-blue-700">
+                      {job.title}
+                    </h3>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(
+                        job.status
+                      )}`}
+                    >
+                      {job.status}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 font-semibold mt-2">
+                    Amount: {formatEther(job.amount)} BSC
+                  </p>
+
+                  <div className="flex mt-3 space-x-4">
+                    <p className="text-yellow-600">
+                      Created:{" "}
+                      {job.created_at
+                        ? formatDistanceToNow(new Date(job.created_at), {
+                            addSuffix: true,
+                          })
+                        : "Unknown"}
+                    </p>
+                    <p className="text-yellow-600">
+                      Updated:{" "}
+                      {job.updated_at
+                        ? formatDistanceToNow(new Date(job.updated_at), {
+                            addSuffix: true,
+                          })
+                        : "Unknown"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col justify-center items-center">
+                  <button
+                    onClick={() =>
+                      navigate(`${UrlMapping.job_found}/${job.id}`)
+                    }
+                    className={`py-2 px-4 rounded-full text-white transition-all duration-300 bg-yellow-500 w-36`}
+                  >
+                    View Job
+                  </button>
+                </div>
+              </div>
+
+              {error && job.id === currentJobId && (
+                <p className="text-red-500 mt-3">{error.message}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">No jobs found.</div>
+      )}
+    </div>
+  );
+};
+
+export default FindJobTab;
+
+#### File path end: ./pages/user_info/components/FindJobTab.tsx
+#### File path start: ./pages/user_info/components/MyJobTab.tsx
+import { UrlMapping } from "@/commons/url-mapping.common";
+import env from "@/env";
+import { useCreateJob } from "@/hooks/useCreateJob";
+import { JobStatus, useJobsByClient } from "@/services/apis/core";
+import { getStatusBadgeClass } from "@/utils/colors";
+import { formatDistanceToNow } from "date-fns";
+import { formatEther } from "ethers";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const MyJobTab: React.FC = () => {
+  const {
+    data: userJobs,
+    isLoading: isJobsLoading,
+    error: errorJobsLoading,
+  } = useJobsByClient();
+  const navigate = useNavigate();
+
+  const [currentJobId, setCurrentJobId] = useState<number | null>(null);
+  const {
+    create,
+    isLoading,
+    isSuccess,
+    error,
+    reset,
+    hash: transactionHash,
+  } = useCreateJob();
+
+  const handleCreateJob = (jobId: number, jobAmount: string) => {
+    setCurrentJobId(jobId);
+    create({ jobId, amount: jobAmount });
+  };
+
+  if (isJobsLoading) {
+    return <div className="text-center py-8">Loading jobs...</div>;
+  }
+
+  if (errorJobsLoading) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Error loading jobs. Please try again later.
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-3xl shadow-2xl">
+      <h2 className="text-3xl font-extrabold text-blue-800 mb-6 text-center">
+        My Jobs
+      </h2>
+      {userJobs && userJobs.length > 0 ? (
+        <div className="space-y-4">
+          {userJobs.map((job) => (
+            <div
+              key={job.id}
+              className="p-6 border rounded-lg shadow-lg bg-gray-50 hover:bg-white transition ease-in-out duration-300"
+            >
+              <div className="flex items-center space-x-6">
+                <img
+                  src={job.image || "https://via.placeholder.com/150"}
+                  alt={job.title}
+                  className="w-24 h-24 object-cover rounded-lg"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-blue-700">
+                      {job.title}
+                    </h3>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeClass(
+                        job.status
+                      )}`}
+                    >
+                      {job.status}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 font-semibold mt-2">
+                    Amount: {formatEther(job.amount)} BSC
+                  </p>
+
+                  <div className="flex mt-3 space-x-4">
+                    <p className="text-yellow-600">
+                      Created:{" "}
+                      {job.created_at
+                        ? formatDistanceToNow(new Date(job.created_at), {
+                            addSuffix: true,
+                          })
+                        : "Unknown"}
+                    </p>
+                    <p className="text-yellow-600">
+                      Updated:
+                      {job.updated_at
+                        ? formatDistanceToNow(new Date(job.updated_at), {
+                            addSuffix: true,
+                          })
+                        : "Unknown"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col justify-center items-center">
+                  <button
+                    onClick={() => handleCreateJob(job.id, job.amount)}
+                    className={`py-2 px-4 rounded-full text-white transition-all duration-300 mb-5 w-36 ${
+                      (isLoading && job.id === currentJobId) ||
+                      job.status !== JobStatus.NEW
+                        ? "bg-yellow-400 cursor-not-allowed"
+                        : "bg-yellow-500 hover:bg-yellow-600"
+                    }`}
+                    disabled={isLoading || job.status !== JobStatus.NEW}
+                  >
+                    {isLoading && job.id === currentJobId
+                      ? "Processing..."
+                      : "Push onchain"}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      navigate(`${UrlMapping.job_picker}/${job.id}`)
+                    }
+                    className={`py-2 px-4 rounded-full text-white transition-all duration-300 bg-yellow-500 hover:bg-yellow-600 w-36`}
+                  >
+                    View Picker
+                  </button>
+                </div>
+              </div>
+              {isSuccess && transactionHash && job.id === currentJobId && (
+                <p className="mt-3 text-green-600">
+                  Push onchain successful!
+                  <a
+                    href={`${env.EXPLORER_SCAN}/tx/${transactionHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    View transaction
+                  </a>
+                </p>
+              )}
+              {error && job.id === currentJobId && (
+                <p className="text-red-500 mt-3">{error.message}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8">No jobs found.</div>
+      )}
+    </div>
+  );
+};
+
+export default MyJobTab;
+
+#### File path end: ./pages/user_info/components/MyJobTab.tsx
+#### File path start: ./pages/user_info/components/UserInfoTab.tsx
+import { useUploadFile } from "@/services/apis/auth"; // Ensure correct path
+import { useUpdateUser, useUserInfo } from "@/services/apis/core";
+import React, { useEffect, useState } from "react";
+
+const UserInfoTab: React.FC = () => {
+  const { data: userInfo, isLoading: isUserLoading } = useUserInfo();
+  const { mutate: updateUser } = useUpdateUser();
+  const { mutate: uploadFile, isSuccess: isSuccessUploadAvatar } =
+    useUploadFile();
+
+  const [formData, setFormData] = useState({
+    userImage: "",
+    name: "",
+    walletAddress: "",
+    bio: "",
+    facebook: "",
+    twitter: "",
+    linkedin: "",
+    github: "",
+    instagram: "",
+  });
+
+  // Populate form data when userInfo is available
+  useEffect(() => {
+    if (userInfo) {
+      setFormData({
+        userImage: userInfo.image || "https://placehold.co/150x150",
+        name: userInfo.name || "",
+        walletAddress: userInfo.wallet_address || "",
+        bio: userInfo.bio || "",
+        facebook: userInfo.facebook || "",
+        twitter: userInfo.twitter || "",
+        linkedin: userInfo.linkedin || "",
+        github: userInfo.github || "",
+        instagram: userInfo.instagram || "",
+      });
+    }
+  }, [userInfo]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+
+      uploadFile(uploadData, {
+        onSuccess: (data) => {
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            userImage: `${data.file_url}`,
+          }));
+        },
+        onError: (error: any) => {
+          alert(`Error uploading avatar: ${error.message}`);
+        },
+      });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const updatedUser = {
+      name: formData.name,
+      bio: formData.bio,
+      image: formData.userImage,
+      facebook: formData.facebook,
+      twitter: formData.twitter,
+      linkedin: formData.linkedin,
+      github: formData.github,
+      instagram: formData.instagram,
+    };
+    updateUser(updatedUser, {
+      onSuccess: () => {
+        alert("User information updated successfully!");
+      },
+      onError: (error: any) => {
+        alert(`Error updating user info: ${error.message}`);
+      },
+    });
+  };
+
+  if (isUserLoading) {
+    return <div className="text-center py-8">Loading user info...</div>;
+  }
+
+  return (
+    <div className="bg-white p-8 rounded-3xl shadow-2xl">
+      <h2 className="text-3xl font-extrabold text-blue-800 mb-6 text-center">
+        Hi, {formData.name}
+      </h2>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-6 text-center">
+          <img
+            src={formData.userImage}
+            alt="User Icon"
+            className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-blue-600"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarChange}
+            className="text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          {isSuccessUploadAvatar && (
+            <p className="text-green-500 mt-2">Image uploaded successfully!</p>
+          )}
+        </div>
+
+        {/* Input fields for user details */}
+        {[
+          { label: "Name", name: "name", type: "text", required: true },
+          {
+            label: "Wallet Address",
+            name: "walletAddress",
+            type: "text",
+            readOnly: true,
+          },
+          { label: "Facebook URL", name: "facebook", type: "url" },
+          { label: "Twitter URL", name: "twitter", type: "url" },
+          { label: "Linkedin URL", name: "linkedin", type: "url" },
+          { label: "Github URL", name: "github", type: "url" },
+          { label: "Instagram URL", name: "instagram", type: "url" },
+        ].map(({ label, name, type, ...rest }) => (
+          <div className="mb-4" key={name}>
+            <label className="block text-lg font-semibold text-gray-800">
+              {label}
+            </label>
+            <input
+              type={type}
+              name={name}
+              value={formData[name as keyof typeof formData] || ""}
+              onChange={handleInputChange}
+              className="w-full mt-2 px-4 py-3 border rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-sm"
+              {...rest}
+            />
+          </div>
+        ))}
+
+        {/* Bio Textarea */}
+        <div className="mb-4">
+          <label className="block text-lg font-semibold text-gray-800">
+            Bio
+          </label>
+          <textarea
+            name="bio"
+            value={formData.bio}
+            onChange={handleInputChange}
+            className="w-full mt-2 px-4 py-3 border rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300 shadow-sm"
+            rows={4}
+            placeholder="Write a short bio about yourself"
+          ></textarea>
+        </div>
+
+        {/* Submit Button */}
+        <div className="text-center">
+          <button
+            type="submit"
+            className="bg-blue-600 text-white py-3 px-8 rounded-full font-semibold shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all duration-300"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default UserInfoTab;
+
+#### File path end: ./pages/user_info/components/UserInfoTab.tsx
+#### File path start: ./pages/user_info/index.tsx
+import NavigationBar from "@/components/NavBar";
+import React, { useState } from "react";
+import FindJobTab from "./components/FindJobTab";
+import MyJobTab from "./components/MyJobTab";
+import UserInfoTab from "./components/UserInfoTab";
+
+const UserInfoPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("userInfo");
+
+  return (
+    <div className="bg-gradient-to-b from-blue-50 to-gray-50 min-h-screen">
+      <NavigationBar />
+      <div className="container mx-auto max-w-6xl p-6 mt-10">
+        <div className="flex justify-center mb-8">
+          <button
+            className={`px-6 py-3 rounded-t-lg font-semibold focus:outline-none mx-1 ${
+              activeTab === "userInfo"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+            onClick={() => setActiveTab("userInfo")}
+          >
+            User Info
+          </button>
+
+          <button
+            className={`px-6 py-3 rounded-t-lg font-semibold focus:outline-none mx-1 ${
+              activeTab === "myJob"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+            onClick={() => setActiveTab("myJob")}
+          >
+            My Jobs
+          </button>
+
+          <button
+            className={`px-6 py-3 rounded-t-lg font-semibold focus:outline-none mx-1 ${
+              activeTab === "findJob"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+            onClick={() => setActiveTab("findJob")}
+          >
+            My Work
+          </button>
+        </div>
+        {activeTab === "userInfo" && <UserInfoTab />}
+        {activeTab === "myJob" && <MyJobTab />}
+        {activeTab === "findJob" && <FindJobTab />}
+      </div>
+    </div>
+  );
+};
+
+export default UserInfoPage;
+
+#### File path end: ./pages/user_info/index.tsx
+#### File path start: ./Router.tsx
+import React from "react";
+import { Route, Routes } from "react-router-dom";
+import { UrlMapping } from "./commons/url-mapping.common";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AllJobsPage from "./pages/all_jobs";
+import CreateJobPage from "./pages/create_job";
+import HomePage from "./pages/home";
+import HowToUsePage from "./pages/how_to_use";
+import InfoPage from "./pages/info";
+import JobDetailsPage from "./pages/job_details";
+import JobFoundPage from "./pages/job_found";
+import JobPickersPage from "./pages/job_picker";
+import ResumePage from "./pages/resume";
+import UserInfoPage from "./pages/user_info";
+
+const Router: React.FC = () => {
+  return (
+    <Routes>
+      <Route path={UrlMapping.home} element={<HomePage />} />
+      <Route path={`${UrlMapping.detail}/:id`} element={<JobDetailsPage />} />
+      <Route
+        path={`${UrlMapping.job_picker}/:id`}
+        element={<ProtectedRoute component={JobPickersPage} />}
+      />{" "}
+      <Route
+        path={`${UrlMapping.job_found}/:id`}
+        element={<ProtectedRoute component={JobFoundPage} />}
+      />
+      <Route path={UrlMapping.create} element={<CreateJobPage />} />
+      <Route path={UrlMapping.info} element={<InfoPage />} />
+      <Route path={UrlMapping.how_to_use} element={<HowToUsePage />} />
+      <Route path={UrlMapping.jobs} element={<AllJobsPage />} />
+      <Route
+        path={UrlMapping.user_info}
+        element={<ProtectedRoute component={UserInfoPage} />}
+      />
+      <Route
+        path={`${UrlMapping.resume}/:walletAddress`}
+        element={<ResumePage />}
+      />
+    </Routes>
+  );
+};
+
+export default Router;
+
+#### File path end: ./Router.tsx
+#### File path start: ./web3/wagmi/Account.tsx
+import React from "react";
+import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+
+const Account: React.FC = () => {
+    const { address } = useAccount();
+    const { disconnect } = useDisconnect();
+    const { data: ensName } = useEnsName({ address });
+    const { data: ensAvatar } = useEnsAvatar({ name: ensName || "" });
+
+    return (
+        <div>
+            {ensAvatar && <img alt="ENS Avatar" src={ensAvatar} />}
+            {address && (
+                <div>{ensName ? `${ensName} (${address})` : address}</div>
+            )}
+            <button onClick={() => disconnect()}>Disconnect</button>
+        </div>
+    );
+};
+
+export default Account;
+
+#### File path end: ./web3/wagmi/Account.tsx
+#### File path start: ./web3/wagmi/config.tsx
+// Import styles
+import "@rainbow-me/rainbowkit/styles.css";
+
+// Import dependencies
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
+import {
+  braveWallet,
+  coin98Wallet,
+  injectedWallet,
+  rainbowWallet,
+  roninWallet,
+  safeWallet,
+  trustWallet,
+  walletConnectWallet,
+} from "@rainbow-me/rainbowkit/wallets";
+import { createConfig, http } from "wagmi";
+import { opBNBTestnet } from "wagmi/chains";
+
+// Define connectors
+const connectors = connectorsForWallets(
+  [
+    {
+      groupName: "Recommended",
+      wallets: [
+        coin98Wallet,
+        rainbowWallet,
+        walletConnectWallet,
+        injectedWallet,
+        safeWallet,
+        trustWallet,
+        braveWallet,
+        roninWallet,
+      ],
+    },
+  ],
+  {
+    appName: "King Job",
+    projectId: "95095172edab2a830311796cfc9d1683",
+  }
+);
+
+// Create configuration
+export const config = createConfig({
+  connectors,
+  chains: [opBNBTestnet],
+  transports: {
+    [opBNBTestnet.id]: http(),
+  },
+});
+
+// Export configuration
+export default config;
+
+#### File path end: ./web3/wagmi/config.tsx
