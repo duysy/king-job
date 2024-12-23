@@ -1,5 +1,6 @@
 # Example Next.js Dockerfile with increased heap size
 FROM node:20-slim
+RUN apt-get update && apt-get install -y python3 python3-pip build-essential && ln -s /usr/bin/python3 /usr/bin/python
 
 WORKDIR /app
 
