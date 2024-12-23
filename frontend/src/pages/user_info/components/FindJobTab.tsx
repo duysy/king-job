@@ -74,7 +74,7 @@ const FindJobTab: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-gray-600 font-semibold mt-2">
-                    Amount: {formatEther(job.amount)} BSC
+                    Amount: {formatEther(job.amount.toString())} BSC
                   </p>
 
                   <div className="flex mt-3 space-x-4">

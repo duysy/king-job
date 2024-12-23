@@ -217,7 +217,7 @@ const AllJobsPage: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <div className="text-green-700 font-semibold text-xl">
-                        {formatEther(job.amount)} BNB
+                        {formatEther(job.amount.toString())} BNB
                       </div>
                       <button
                         onClick={() =>

@@ -1,9 +1,9 @@
-import NavigationBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import NavigationBar from "@/components/NavBar";
 import { useUserResume } from "@/services/apis/core";
+import { formatEther } from "ethers";
 import React from "react";
 import { useParams } from "react-router-dom";
-import { formatEther } from "ethers";
 
 const ResumePage: React.FC = () => {
   const { walletAddress } = useParams<{ walletAddress: string }>();
@@ -104,7 +104,7 @@ const ResumePage: React.FC = () => {
                 <p className="text-gray-600 mt-2">{project.description}</p>
                 <div className="mt-4 text-gray-500">
                   <span className="font-bold">Amount Earned:</span>{" "}
-                  {formatEther(project.amount)} BNB
+                  {formatEther(project.amount.toString())} BNB
                 </div>
                 <div className="text-gray-400 text-sm">
                   Completed At:{" "}
@@ -121,7 +121,7 @@ const ResumePage: React.FC = () => {
             Total Income
           </h2>
           <p className="text-green-600 font-bold text-3xl">
-            {formatEther(userInfo.total_income)} BNB
+            {formatEther(userInfo.total_income.toString())} BNB
           </p>
         </section>
       </main>

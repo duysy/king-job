@@ -112,7 +112,7 @@ const JobFoundPage: React.FC = () => {
           <div className="mb-6">
             <h4 className="text-2xl font-bold text-blue-700">Amount</h4>
             <p className="text-lg text-gray-600 mt-2">
-              {formatEther(job.amount)} BNB
+              {formatEther(job.amount.toString())} BNB
             </p>
           </div>
           <div className="mb-6">

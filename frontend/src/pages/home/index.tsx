@@ -144,7 +144,7 @@ const HomePage: React.FC = () => {
                     </p>
                     <div className="flex justify-between items-center mt-4">
                       <span className="font-semibold text-green-600">
-                        {formatEther(job.amount)} BSC
+                        {formatEther(job.amount.toString())} BSC
                       </span>
                       <span className="text-xs text-gray-400">
                         {formatDistanceToNow(new Date(job.created_at), {
