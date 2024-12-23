@@ -164,9 +164,15 @@ const CreateJobPage: React.FC = () => {
               </label>
               <input
                 type="number"
+                step="0.00001"
                 className="w-full mt-2 px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
                 placeholder="Enter payment amount"
-                {...register("amount", { required: "Amount is required" })}
+                {...register("amount", {
+                  required: "Amount is required",
+                  valueAsNumber: true,
+                  validate: (value) =>
+                    value > 0 || "Amount must be greater than 0",
+                })}
               />
               {errors.amount?.message && (
                 <p className="text-red-500">{String(errors.amount.message)}</p>
