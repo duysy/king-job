@@ -75,7 +75,7 @@ async function processLogs(): Promise<void> {
                     await updateJobTransactions(
                         jobId,
                         job.transaction_create,
-                        job.transaction_complete_job,
+                        job.transaction_accept_job,
                         transactionHash,
                         job.freelancer_id,
                         JobStatus.COMPLETED,
@@ -83,10 +83,10 @@ async function processLogs(): Promise<void> {
                 }
             }
 
-            await client.query("UPDATE freelancer_platform_app_lastindexcrawl SET value = $1, updated_at = NOW() WHERE key = $2", [
-                nowBlock,
-                key,
-            ]);
+            await client.query(
+                "UPDATE freelancer_platform_app_lastindexcrawl SET value = $1, updated_at = NOW() WHERE key = $2",
+                [nowBlock, key],
+            );
         } catch (error) {
             console.error("Error processing logs:", error);
         } finally {
